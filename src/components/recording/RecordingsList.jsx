@@ -1,6 +1,5 @@
 import React from 'react';
 import { useAnonymousStorage } from '../../hooks/useAnonymousStorage';
-import { PlayIcon, TrashIcon } from '@heroicons/react/24/solid';
 
 const RecordingsList = ({ onSelect }) => {
   const { recordings, deleteRecording, getRecordingBlob } = useAnonymousStorage();
@@ -16,7 +15,7 @@ const RecordingsList = ({ onSelect }) => {
   };
 
   const handlePlay = (e, recording) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent default link behavior
     const blob = getRecordingBlob(recording);
     if (blob) {
       onSelect({ ...recording, blob });
@@ -27,7 +26,7 @@ const RecordingsList = ({ onSelect }) => {
     <div className="recordings-list">
       <h2>Your Recordings</h2>
       {recordings.length === 0 ? (
-        <p className="text-center text-gray-500 py-8">No recordings yet</p>
+        <p className="no-recordings">No recordings yet</p>
       ) : (
         <div className="recordings-grid">
           {recordings.map((recording) => (
@@ -42,16 +41,14 @@ const RecordingsList = ({ onSelect }) => {
               <div className="recording-actions">
                 <button 
                   onClick={(e) => handlePlay(e, recording)} 
-                  className="play-button inline-flex items-center gap-2"
+                  className="play-button"
                 >
-                  <PlayIcon className="w-4 h-4" />
                   Play
                 </button>
                 <button 
                   onClick={() => deleteRecording(recording.id)}
-                  className="delete-button inline-flex items-center gap-2"
+                  className="delete-button"
                 >
-                  <TrashIcon className="w-4 h-4" />
                   Delete
                 </button>
               </div>
@@ -63,4 +60,4 @@ const RecordingsList = ({ onSelect }) => {
   );
 };
 
-export default RecordingsList;
+export default RecordingsList; 

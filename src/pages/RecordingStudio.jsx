@@ -1,67 +1,70 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import RecordingHeader from '../components/recording/RecordingHeader';
 import RecordingInterface from '../components/recording/RecordingInterface';
 import PlaybackControls from '../components/recording/PlaybackControls';
-import AudioEffects from '../components/recording/AudioEffects';
 import SharingOptions from '../components/recording/SharingOptions';
 import RecordingsList from '../components/recording/RecordingsList';
-import { useRecordings } from '../hooks/useRecordings';
-import '../styles/recording.css';
+import { useAnonymousStorage } from '../hooks/useAnonymousStorage';
 
 const RecordingStudio = () => {
+  const [recordingCount, setRecordingCount] = useState(0);
   const [audioBlob, setAudioBlob] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [selectedRecording, setSelectedRecording] = useState(null);
-  const [showEffects, setShowEffects] = useState(false);
+  const [error, setError] = useState(null);
   
-  const {
-    recordings,
-    loading,
-    error,
-    addRecording,
-    isAuthenticated
-  } = useRecordings();
+  // Get the hook values
+  const { recordings, addRecording, storageError } = useAnonymousStorage();
+
+  // Update recording count when recordings change
+  useEffect(() => {
+    setRecordingCount(recordings.length); // Update recording count based on recordings array
+  }, [recordings]);
 
   const handleRecordingComplete = async (blob) => {
     try {
       const recording = await addRecording(blob, {
         type: 'recording',
         duration: 0,
-        name: `Recording ${recordings.length + 1}`
+        name: `Recording ${recordingCount + 1}`
       });
       setAudioBlob(blob);
       setIsRecording(false);
-      setShowEffects(true);
+      setError(null);
     } catch (error) {
       console.error('Failed to save recording:', error);
+      setError(error.message);
     }
   };
 
   const handleRecordingSelect = (recording) => {
-    setSelectedRecording(recording);
-    setAudioBlob(recording.blob);
-    setShowEffects(true);
+    if (recording && recording.blob) {
+      setSelectedRecording(recording);
+      setAudioBlob(recording.blob);
+    }
   };
 
   return (
     <div className="recording-studio">
-      <RecordingHeader 
-        recordingCount={recordings.length} 
-        isAuthenticated={isAuthenticated}
-      />
+      <RecordingHeader recordingCount={recordingCount} />
       
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        {error && (
-          <div className="bg-red-50 text-red-500 p-4 rounded-lg mb-6">
-            {error}
+      <main className="recording-interface">
+        {(error || storageError) && (
+          <div className="error-message">
+            {error || storageError}
           </div>
         )}
+        
+        <div className="search-bar">
+          <input type="search" placeholder="Search reverbs" />
+          <button className="cancel-button">CANCEL</button>
+        </div>
 
         <RecordingInterface 
           isRecording={isRecording}
           setIsRecording={setIsRecording}
           onRecordingComplete={handleRecordingComplete}
-          recordingCount={recordings.length}
+          recordingCount={recordingCount}
         />
         
         {(audioBlob || selectedRecording) && (
@@ -69,20 +72,13 @@ const RecordingStudio = () => {
             <PlaybackControls 
               audioBlob={selectedRecording?.blob || audioBlob} 
             />
-            {showEffects && (
-              <AudioEffects onApplyEffect={() => {}} />
-            )}
             <SharingOptions 
-              recording={selectedRecording}
-              isAuthenticated={isAuthenticated}
+              audioBlob={selectedRecording?.blob || audioBlob} 
             />
           </>
         )}
 
-        <RecordingsList 
-          onSelect={handleRecordingSelect}
-          loading={loading}
-        />
+        <RecordingsList onSelect={handleRecordingSelect} />
       </main>
     </div>
   );

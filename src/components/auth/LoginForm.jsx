@@ -35,6 +35,32 @@ const LoginForm = () => {
     }
   };
 
+  // Add this function to handle migration of anonymous recordings
+  const migrateAnonymousRecordings = async (user) => {
+    const anonymousRecordings = JSON.parse(localStorage.getItem('anonymous_recordings') || '[]');
+    
+    for (const recording of anonymousRecordings) {
+      const fileName = `recording-${Date.now()}.webm`;
+      const filePath = `${user.id}/${fileName}`;
+      
+      // Upload to Supabase storage
+      await supabase.storage
+        .from('tracks')
+        .upload(filePath, recording.blob);
+        
+      // Add to tracks table
+      await supabase.from('tracks')
+        .insert([{
+          name: fileName,
+          file_path: filePath,
+          user_id: user.id
+        }]);
+    }
+    
+    // Clear anonymous recordings
+    localStorage.removeItem('anonymous_recordings');
+  };
+
   return (
     <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-6">Sign In</h2>

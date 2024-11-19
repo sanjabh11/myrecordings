@@ -1,36 +1,65 @@
+// src/services/supabaseClient.js
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://bdazoayglvhxhwngiafd.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJkYXpvYXlnbHZoeGh3bmdpYWZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDg2MjY5ODAsImV4cCI6MjAyNDIwMjk4MH0.0ZKFvOjZRoHDEsC7ZxVR4zNkGxhXqKM5c-x9IyG_qYY';
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase configuration');
-}
+const supabaseUrl = 'https://zkhvucynanvnjtiztdnl.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: true,
-    flowType: 'pkce'
+    autoRefreshToken: true,
+    detectSessionInUrl: true
+  },
+  global: {
+    headers: {
+      'Content-Type': 'application/json'
+    }
   }
 });
 
-// Initialize storage bucket
-const initializeStorage = async () => {
-  try {
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const recordingsBucket = buckets?.find(b => b.name === 'recordings');
+// Storage bucket constants
+export const STORAGE_BUCKET = 'tracks';
 
-    if (!recordingsBucket) {
-      await supabase.storage.createBucket('recordings', {
-        public: true,
-        fileSizeLimit: 60000000 // 60MB
-      });
+// Helper function for storage operations
+export const getStorageClient = () => {
+  return supabase.storage.from(STORAGE_BUCKET);
+};
+
+// Storage operations helper functions
+export const storageHelpers = {
+  // Upload a recording
+  uploadRecording: async (blob, fileName, userId) => {
+    try {
+      const filePath = `${userId}/${fileName}`;
+      const { data, error } = await getStorageClient()
+        .upload(filePath, blob, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) throw error;
+      return { filePath, data };
+    } catch (error) {
+      console.error('Upload error:', error);
+      throw error;
     }
-  } catch (error) {
-    console.error('Error initializing storage:', error);
+  },
+
+  // Delete a recording
+  deleteRecording: async (filePath) => {
+    try {
+      const { error } = await getStorageClient().remove([filePath]);
+      if (error) throw error;
+    } catch (error) {
+      console.error('Delete error:', error);
+      throw error;
+    }
+  },
+
+  // Get a public URL for a recording
+  getPublicUrl: (filePath) => {
+    return getStorageClient().getPublicUrl(filePath);
   }
 };
 
-initializeStorage();
+export default supabase;

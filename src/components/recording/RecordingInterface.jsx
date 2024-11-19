@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import WaveSurfer from 'wavesurfer.js';
-import { useAuth } from '../../contexts/AuthContext';
 
 const RecordingInterface = ({ 
   isRecording, 
@@ -15,9 +14,9 @@ const RecordingInterface = ({
   const timerInterval = useRef(null);
   const waveformRef = useRef(null);
   const wavesurfer = useRef(null);
-  const { user } = useAuth();
 
   useEffect(() => {
+    // Initialize WaveSurfer
     wavesurfer.current = WaveSurfer.create({
       container: waveformRef.current,
       waveColor: 'var(--primary-color)',
@@ -29,15 +28,9 @@ const RecordingInterface = ({
     return () => wavesurfer.current.destroy();
   }, []);
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
   const startRecording = async () => {
-    if (!user && recordingCount >= 10) {
-      setError('Recording limit reached. Please sign in for unlimited recordings.');
+    if (recordingCount >= 10) {
+      setError('Recording limit reached. Please upgrade to premium for unlimited recordings.');
       return;
     }
 
@@ -89,13 +82,21 @@ const RecordingInterface = ({
     }
   };
 
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
+    // Update valid file types to include AAC
     const validTypes = ['.mp3', '.wav', '.m4a', '.aac'];
     const fileType = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
     
+    // Update MIME types to include AAC
     const validMimeTypes = [
       'audio/mpeg',
       'audio/wav',
@@ -109,10 +110,11 @@ const RecordingInterface = ({
 
     if (!validTypes.includes(fileType) && !validMimeTypes.includes(file.type)) {
       setError('Invalid file type. Please upload MP3, WAV, M4A, or AAC files only.');
-      event.target.value = '';
+      event.target.value = ''; // Clear the input
       return;
     }
 
+    // Validate file size (60MB limit)
     const MAX_SIZE = 60 * 1024 * 1024; // 60MB in bytes
     if (file.size > MAX_SIZE) {
       setError('File size exceeds 60MB limit.');
@@ -120,15 +122,17 @@ const RecordingInterface = ({
     }
 
     try {
+      // Create audio element to check duration
       const audio = new Audio();
       audio.src = URL.createObjectURL(file);
       
       audio.addEventListener('loadedmetadata', () => {
-        if (audio.duration > 120) {
+        if (audio.duration > 120) { // 2 minutes limit
           setError('Audio duration exceeds 2 minutes limit.');
           return;
         }
 
+        // Convert file to blob and handle as recording
         const reader = new FileReader();
         reader.onload = async (e) => {
           const blob = new Blob([e.target.result], { type: file.type });
@@ -164,7 +168,7 @@ const RecordingInterface = ({
         <button 
           className={`record-button ${isRecording ? 'recording' : ''}`}
           onClick={isRecording ? stopRecording : startRecording}
-          disabled={!user && recordingCount >= 10}
+          disabled={recordingCount >= 10}
         >
           <i className="microphone-icon"></i>
         </button>
@@ -172,11 +176,6 @@ const RecordingInterface = ({
           {formatTime(timer)}/02:00
         </div>
         {error && <div className="error-message">{error}</div>}
-        {!user && recordingCount >= 8 && (
-          <div className="text-amber-600 mt-2">
-            Almost at recording limit! Sign in for unlimited recordings.
-          </div>
-        )}
       </section>
 
       <div ref={waveformRef} className="waveform"></div>
@@ -201,4 +200,4 @@ const RecordingInterface = ({
   );
 };
 
-export default RecordingInterface;
+export default RecordingInterface; 
