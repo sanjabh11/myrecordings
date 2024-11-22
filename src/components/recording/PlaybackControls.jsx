@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../services/supabaseClient';
+import { supabase, storageHelpers } from '../../services/supabaseClient';
 
 const PlaybackControls = ({ audioBlob, onSave }) => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -78,17 +78,9 @@ const PlaybackControls = ({ audioBlob, onSave }) => {
     try {
       setIsSaving(true);
       const fileName = `recording_${Date.now()}.webm`;
-      const filePath = `${user.id}/${fileName}`;
-
-      // Upload to Supabase Storage
-      const { data, error: uploadError } = await supabase.storage
-        .from('tracks')
-        .upload(filePath, audioBlob, {
-          contentType: 'audio/webm',
-          cacheControl: '3600'
-        });
-
-      if (uploadError) throw uploadError;
+      
+      // Use the storage helper function
+      const { filePath } = await storageHelpers.uploadRecording(audioBlob, fileName, user.id);
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage

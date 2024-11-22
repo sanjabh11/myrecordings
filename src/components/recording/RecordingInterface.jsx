@@ -41,7 +41,7 @@ const RecordingInterface = ({
       recorder.ondataavailable = (e) => chunks.current.push(e.data);
       
       recorder.onstop = () => {
-        const blob = new Blob(chunks.current, { type: 'audio/webm' });
+        const blob = new Blob(chunks.current, { type: 'audio/webm; codecs=opus' });
         chunks.current = [];
         onRecordingComplete(blob);
       };
@@ -200,4 +200,4 @@ const RecordingInterface = ({
   );
 };
 
-export default RecordingInterface; 
+export default RecordingInterface;
