@@ -1,0 +1,63 @@
+.sharePage {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #f5f5f5;
+}
+
+.container {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  max-width: 500px;
+  width: 90%;
+}
+
+.container h1 {
+  margin-bottom: 2rem;
+  color: #333;
+}
+
+.player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.playButton {
+  background-color: #4a9eff;
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.playButton:hover {
+  background-color: #1976d2;
+}
+
+.playButton.playing {
+  background-color: #dc3545;
+}
+
+.playButton.playing:hover {
+  background-color: #c82333;
+}
+
+.errorContainer {
+  text-align: center;
+  color: #dc3545;
+}
+
+.loading {
+  color: #666;
+  margin: 1rem 0;
+}

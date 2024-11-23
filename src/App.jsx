@@ -7,9 +7,10 @@ import RecordingStudio from './pages/RecordingStudio';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import AuthCallback from './pages/AuthCallback';
+import SharePage from './pages/SharePage';
 import './styles/main.css';
 
-function App() {
+const App = () => {
   return (
     <Router>
       <AuthProvider>
@@ -19,10 +20,11 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
+          <Route path="/share/:userId/:recordingId" element={<SharePage />} />
         </Routes>
       </AuthProvider>
     </Router>
   );
-}
+};
 
 export default App;

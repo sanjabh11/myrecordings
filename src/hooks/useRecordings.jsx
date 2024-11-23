@@ -1,13 +1,18 @@
-// src/hooks/useRecordings.jsx
 import { useState, useEffect } from 'react';
-import { supabase } from '../services/supabaseClient';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../services/supabaseClient';
+import useAnonymousStorage from './useAnonymousStorage';
 
 export const useRecordings = () => {
   const { user } = useAuth();
   const [recordings, setRecordings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const anonymousStorage = useAnonymousStorage();
+
+  useEffect(() => {
+    fetchRecordings();
+  }, [user]);
 
   const fetchRecordings = async () => {
     try {
@@ -15,7 +20,7 @@ export const useRecordings = () => {
       if (user) {
         // Fetch authenticated user recordings from Supabase
         const { data, error } = await supabase
-          .from('tracks')
+          .from('recordings')
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
@@ -23,98 +28,134 @@ export const useRecordings = () => {
         if (error) throw error;
         setRecordings(data || []);
       } else {
-        // Fetch anonymous recordings from localStorage
-        const storedRecordings = localStorage.getItem('anonymous_recordings');
-        setRecordings(storedRecordings ? JSON.parse(storedRecordings) : []);
+        // Use anonymous storage for unauthenticated users
+        setRecordings(anonymousStorage.recordings);
       }
     } catch (err) {
+      console.error('Error fetching recordings:', err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const uploadRecording = async (blob, fileName) => {
+  const addRecording = async (blob, metadata = {}) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('No authenticated user');
+      if (user) {
+        // Upload to Supabase for authenticated users
+        const fileName = `recording_${Date.now()}.webm`;
+        const filePath = `${user.id}/${fileName}`;
+        const storage = supabase.storage.from('tracks');
 
-      const filePath = `${user.id}/${fileName}`;
-      const storage = getStorageClient();
+        const { data, error: uploadError } = await storage
+          .upload(filePath, blob, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
-      const { data, error: uploadError } = await storage
-        .upload(filePath, blob, {
-          cacheControl: '3600',
-          upsert: false
-        });
+        if (uploadError) throw uploadError;
 
-      if (uploadError) throw uploadError;
+        const { data: { publicUrl } } = storage.getPublicUrl(filePath);
 
-      const { data: { publicUrl } } = storage.getPublicUrl(filePath);
+        const { data: recording, error: dbError } = await supabase
+          .from('recordings')
+          .insert([{
+            name: fileName,
+            file_path: filePath,
+            public_url: publicUrl,
+            user_id: user.id,
+            is_public: true,
+            share_token: crypto.randomUUID()
+          }])
+          .select()
+          .single();
 
-      // Add to tracks table
-      const { data: track, error: dbError } = await supabase
-        .from('tracks')
-        .insert([{
-          name: fileName,
-          file_path: filePath,
-          url: publicUrl,
-          user_id: user.id
-        }])
-        .select()
-        .single();
+        if (dbError) throw dbError;
 
-      if (dbError) throw dbError;
-
-      setRecordings(prev => [track, ...prev]);
-      return track;
+        setRecordings(prev => [recording, ...prev]);
+        return recording;
+      } else {
+        // Use anonymous storage for unauthenticated users
+        const recording = await anonymousStorage.addRecording(blob, metadata);
+        setRecordings(anonymousStorage.recordings);
+        return recording;
+      }
     } catch (err) {
       console.error('Upload error:', err);
       throw err;
     }
   };
 
-  const deleteRecording = async (id) => {
+  const deleteRecording = async (recordingId) => {
     try {
-      const recording = recordings.find(r => r.id === id);
-      if (!recording) throw new Error('Recording not found');
+      if (user) {
+        // Delete from Supabase for authenticated users
+        const recording = recordings.find(r => r.id === recordingId);
+        if (!recording) throw new Error('Recording not found');
 
-      const storage = getStorageClient();
-      
-      // Delete from storage
-      const { error: storageError } = await storage
-        .remove([recording.file_path]);
+        const storage = supabase.storage.from('tracks');
+        
+        // Delete from storage
+        const { error: storageError } = await storage
+          .remove([recording.file_path]);
 
-      if (storageError) throw storageError;
+        if (storageError) throw storageError;
 
-      // Delete from database
-      const { error: dbError } = await supabase
-        .from('tracks')
-        .delete()
-        .eq('id', id);
+        // Delete from database
+        const { error: dbError } = await supabase
+          .from('recordings')
+          .delete()
+          .eq('id', recordingId);
 
-      if (dbError) throw dbError;
+        if (dbError) throw dbError;
 
-      setRecordings(prev => prev.filter(r => r.id !== id));
+        setRecordings(prev => prev.filter(r => r.id !== recordingId));
+      } else {
+        // Use anonymous storage for unauthenticated users
+        await anonymousStorage.deleteRecording(recordingId);
+        setRecordings(anonymousStorage.recordings);
+      }
     } catch (err) {
       console.error('Delete error:', err);
       throw err;
     }
   };
 
-  useEffect(() => {
-    fetchRecordings();
-  }, [user]);
+  const updateRecording = async (id, updates) => {
+    try {
+      if (user) {
+        // Update in Supabase for authenticated users
+        const { error } = await supabase
+          .from('recordings')
+          .update(updates)
+          .eq('id', id);
+
+        if (error) throw error;
+
+        setRecordings(prevRecordings =>
+          prevRecordings.map(recording =>
+            recording.id === id ? { ...recording, ...updates } : recording
+          )
+        );
+      } else {
+        // Anonymous users can't update recordings
+        throw new Error('Please sign in to update recordings');
+      }
+    } catch (error) {
+      console.error('Error updating recording:', error);
+      throw error;
+    }
+  };
 
   return {
     recordings,
-    setRecordings,
     loading,
     error,
-    fetchRecordings,
-    uploadRecording,
+    addRecording,
     deleteRecording,
-    user,
-    isAuthenticated: !!user
+    updateRecording,
+    fetchRecordings
   };
 };
+
+export default useRecordings;
