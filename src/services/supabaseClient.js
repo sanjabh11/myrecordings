@@ -12,7 +12,8 @@ const options = {
   },
   global: {
     headers: {
-      'Access-Control-Allow-Origin': '*'
+      'X-Client-Info': 'sing-a-song',
+      'Access-Control-Allow-Origin': ['https://sing-a-song.netlify.app', 'http://localhost:5173']
     }
   }
 };
@@ -25,6 +26,12 @@ const STORAGE_BUCKET = 'tracks';
 // Helper function for storage operations
 const getStorageClient = () => {
   return supabase.storage.from(STORAGE_BUCKET);
+};
+
+// Helper function to get base URL
+const getBaseUrl = () => {
+  const isProd = import.meta.env.PROD;
+  return isProd ? 'https://sing-a-song.netlify.app' : 'http://localhost:5173';
 };
 
 // Storage operations helper functions
@@ -114,7 +121,7 @@ const storageHelpers = {
 
   // Generate a share link
   generateShareLink: (userId, recordingId) => {
-    const baseUrl = window.location.origin;
+    const baseUrl = getBaseUrl();
     return `${baseUrl}/share/${userId}/${recordingId}`;
   }
 };
