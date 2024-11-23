@@ -20,8 +20,7 @@
 }
 
 .recordingName {
-  font-size: 1.1rem;
-  font-weight: 500;
+  font-weight: 600;
   margin-bottom: 0.5rem;
 }
 
@@ -34,55 +33,72 @@
 }
 
 .recordingMeta {
-  color: #666;
   font-size: 0.9rem;
+  color: #666;
 }
 
 .recordingActions {
   display: flex;
   gap: 0.5rem;
-  align-items: center;
 }
 
 .actionButton {
   padding: 0.5rem 1rem;
   border: none;
   border-radius: 4px;
-  font-size: 0.9rem;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  transition: all 0.2s;
-}
-
-.buttonIcon {
-  font-size: 1.2rem;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
 }
 
 .playButton {
-  background: #4CAF50;
+  background-color: #4a9eff;
   color: white;
+}
+
+.playButton:hover {
+  background-color: #1976d2;
+}
+
+.playButton.playing {
+  background-color: #dc3545;
+}
+
+.playButton.playing:hover {
+  background-color: #c82333;
 }
 
 .editButton {
-  background: #2196F3;
+  background-color: #2196F3;
   color: white;
+}
+
+.editButton:hover {
+  background-color: #1976d2;
 }
 
 .shareButton {
-  background: #9C27B0;
+  background-color: #28a745;
   color: white;
+}
+
+.shareButton:hover {
+  background-color: #218838;
 }
 
 .deleteButton {
-  background: #f44336;
+  background-color: #dc3545;
   color: white;
 }
 
-.actionButton:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
+.deleteButton:hover {
+  background-color: #c82333;
+}
+
+.noRecordings {
+  text-align: center;
+  color: #666;
+  padding: 2rem;
 }
 
 .shareModal {
@@ -102,14 +118,19 @@
   background: white;
   padding: 2rem;
   border-radius: 8px;
-  width: 90%;
   max-width: 500px;
+  width: 90%;
+}
+
+.shareModalContent h3 {
+  margin: 0 0 1.5rem 0;
+  color: #333;
 }
 
 .shareUrl {
   display: flex;
   gap: 0.5rem;
-  margin: 1rem 0;
+  margin-bottom: 1.5rem;
 }
 
 .shareUrl input {
@@ -122,15 +143,49 @@
 
 .shareUrl button {
   padding: 0.5rem 1rem;
-  background: #2196F3;
+  background-color: #4a9eff;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
 }
 
-.noRecordings {
+.shareUrl button:hover {
+  background-color: #1976d2;
+}
+
+.shareNote {
+  background-color: #fff3cd;
+  border: 1px solid #ffeeba;
+  color: #856404;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.closeButton {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.closeButton:hover {
+  background-color: #5a6268;
+}
+
+.error {
+  color: #dc3545;
   text-align: center;
-  color: #666;
-  padding: 2rem;
+  padding: 1rem;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  margin: 1rem 0;
 }

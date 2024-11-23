@@ -1,16 +1,23 @@
 // src/services/supabaseClient.js
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://zkhvucynanvnjtiztdnl.supabase.co';
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+const options = {
   auth: {
-    persistSession: true,
     autoRefreshToken: true,
+    persistSession: true,
     detectSessionInUrl: true
+  },
+  global: {
+    headers: {
+      'Access-Control-Allow-Origin': '*'
+    }
   }
-});
+};
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey, options);
 
 // Storage bucket constants
 const STORAGE_BUCKET = 'tracks';
