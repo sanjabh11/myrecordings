@@ -13,12 +13,24 @@ const SharePage = () => {
     const loadSharedRecording = async () => {
       try {
         setIsLoading(true);
+        setError(null);
+
+        console.log('Loading recording with IDs:', { userId, recordingId });
         const { userId: originalUserId, recordingId: originalRecordingId } = storageHelpers.getOriginalIds(userId, recordingId);
+        console.log('Original IDs:', { originalUserId, originalRecordingId });
+
         const url = await storageHelpers.getSharedRecordingUrl(originalUserId, originalRecordingId);
+        console.log('Got URL:', url);
         setAudioUrl(url);
       } catch (error) {
         console.error('Error loading shared recording:', error);
-        setError('Failed to load the shared recording');
+        if (error.message.includes('Failed to convert')) {
+          setError('Invalid share link. The link might be malformed or expired.');
+        } else if (error.message.includes('Recording not found')) {
+          setError('This recording has been deleted or is no longer available.');
+        } else {
+          setError('Failed to load the shared recording. Please try again later.');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -31,8 +43,9 @@ const SharePage = () => {
     return (
       <div className={styles.sharePage}>
         <div className={styles.errorContainer}>
-          <h1>Error</h1>
-          <p>{error}</p>
+          <h1>Unable to Play Recording</h1>
+          <p className={styles.errorMessage}>{error}</p>
+          <a href="/" className={styles.homeLink}>Go to Home</a>
         </div>
       </div>
     );
@@ -47,12 +60,13 @@ const SharePage = () => {
         ) : (
           <div className={styles.player}>
             {audioUrl ? (
-              <audio controls>
+              <audio controls className={styles.audioPlayer}>
                 <source src={audioUrl} type="audio/mpeg" />
+                <source src={audioUrl} type="audio/webm" />
                 Your browser does not support the audio element.
               </audio>
             ) : (
-              <div>No recording found.</div>
+              <div className={styles.noRecording}>No recording found.</div>
             )}
           </div>
         )}

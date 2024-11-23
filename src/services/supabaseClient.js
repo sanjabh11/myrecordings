@@ -1,4 +1,3 @@
-// src/services/supabaseClient.js
 import { createClient } from '@supabase/supabase-js';
 import { uuidToBase62, base62ToUuid } from '../utils/base62';
 
@@ -67,54 +66,59 @@ const storageHelpers = {
   // Delete a recording from Supabase
   deleteRecording: async (userId, recordingId) => {
     try {
-      const filePath = `${userId}/${recordingId}.webm`;
-      const { error } = await getStorageClient().remove([filePath]);
+      const { error } = await getStorageClient().remove([`${userId}/${recordingId}.webm`]);
       if (error) throw error;
-      return true;
     } catch (error) {
       console.error('Delete error:', error);
       throw error;
     }
   },
 
-  // Get a recording's public URL
-  getPublicUrl: (userId, recordingId) => {
-    const filePath = `${userId}/${recordingId}.webm`;
-    const { data: { publicUrl } } = getStorageClient().getPublicUrl(filePath);
-    return publicUrl;
+  // Get a list of recordings for a user
+  listRecordings: async (userId) => {
+    try {
+      const { data, error } = await getStorageClient().list(userId + '/');
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error('List error:', error);
+      throw error;
+    }
   },
 
-  // Get recording by share token
-  getSharedRecording: async (userId, recordingId) => {
+  // Get a shared recording URL
+  getSharedRecordingUrl: async (userId, recordingId) => {
     try {
-      const filePath = `${userId}/${recordingId}.webm`;
-      
-      // First check if the file exists
-      const { data: fileExists, error: existsError } = await getStorageClient()
-        .download(filePath);
+      // Try both .webm and .mp3 extensions
+      const extensions = ['.webm', '.mp3'];
+      let url = null;
 
-      if (existsError || !fileExists) {
+      for (const ext of extensions) {
+        const filePath = `${userId}/${recordingId}${ext}`;
+        console.log('Trying path:', filePath);
+        
+        // Check if the file exists
+        const { data: files } = await getStorageClient().list(userId + '/', {
+          search: recordingId + ext
+        });
+
+        if (files && files.length > 0) {
+          const { data } = getStorageClient().getPublicUrl(filePath);
+          url = data.publicUrl;
+          console.log('Found URL:', url);
+          break;
+        }
+      }
+
+      if (!url) {
+        console.error('Recording not found for:', { userId, recordingId });
         throw new Error('Recording not found');
       }
 
-      // Get the public URL
-      const { data: { publicUrl } } = getStorageClient().getPublicUrl(filePath);
-
-      return {
-        data: {
-          id: recordingId,
-          url: publicUrl,
-          userId,
-          filePath
-        },
-        error: null
-      };
+      return url;
     } catch (error) {
-      console.error('Error fetching shared recording:', error);
-      return {
-        data: null,
-        error: error.message || 'Failed to fetch recording'
-      };
+      console.error('Error getting shared recording URL:', error);
+      throw error;
     }
   },
 
@@ -128,10 +132,18 @@ const storageHelpers = {
 
   // Get original UUIDs from short IDs
   getOriginalIds: (shortUserId, shortRecordingId) => {
-    return {
-      userId: base62ToUuid(shortUserId),
-      recordingId: base62ToUuid(shortRecordingId)
-    };
+    try {
+      console.log('Converting IDs:', { shortUserId, shortRecordingId });
+      const originalIds = {
+        userId: base62ToUuid(shortUserId),
+        recordingId: base62ToUuid(shortRecordingId)
+      };
+      console.log('Original IDs:', originalIds);
+      return originalIds;
+    } catch (error) {
+      console.error('Error converting IDs:', error);
+      throw error;
+    }
   }
 };
 
