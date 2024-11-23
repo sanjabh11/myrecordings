@@ -181,10 +181,6 @@ const RecordingsList = ({ recordings, onDelete, getRecordingBlob, error }) => {
               <input type="text" value={shareUrl} readOnly />
               <button onClick={copyToClipboard}>Copy</button>
             </div>
-            <p className={styles.shareNote}>
-              Note: This link will only work on this computer while the app is running locally. 
-              To share with others, the app needs to be deployed to a public website.
-            </p>
             <button className={styles.closeButton} onClick={() => setShowShareModal(false)}>Close</button>
           </div>
         </div>

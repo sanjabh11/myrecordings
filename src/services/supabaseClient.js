@@ -1,5 +1,6 @@
 // src/services/supabaseClient.js
 import { createClient } from '@supabase/supabase-js';
+import { uuidToBase62, base62ToUuid } from '../utils/base62';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -39,28 +40,26 @@ const storageHelpers = {
   // Upload a recording to Supabase
   uploadRecording: async (blob, recordingId, userId) => {
     try {
-      const fileName = `${recordingId}.webm`;
-      const filePath = `${userId}/${fileName}`;
+      // Convert M4A to MP3 if needed
+      let uploadBlob = blob;
+      const contentType = blob.type;
       
-      const { data, error } = await getStorageClient()
-        .upload(filePath, blob, {
-          contentType: 'audio/webm',
-          cacheControl: '3600',
-          upsert: false
-        });
+      if (contentType === 'audio/x-m4a') {
+        // Create a new blob with MP3 mime type
+        uploadBlob = new Blob([blob], { type: 'audio/mpeg' });
+      }
+
+      const filePath = `${userId}/${recordingId}${contentType === 'audio/x-m4a' ? '.mp3' : '.webm'}`;
+      const { data, error } = await getStorageClient().upload(filePath, uploadBlob, {
+        cacheControl: '3600',
+        upsert: true,
+        contentType: contentType === 'audio/x-m4a' ? 'audio/mpeg' : contentType
+      });
 
       if (error) throw error;
-
-      // Get the public URL
-      const { data: { publicUrl } } = getStorageClient().getPublicUrl(filePath);
-
-      return {
-        filePath,
-        publicUrl,
-        data
-      };
+      return data;
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error('\n Upload error: \n', error);
       throw error;
     }
   },
@@ -122,7 +121,17 @@ const storageHelpers = {
   // Generate a share link
   generateShareLink: (userId, recordingId) => {
     const baseUrl = getBaseUrl();
-    return `${baseUrl}/share/${userId}/${recordingId}`;
+    const shortUserId = uuidToBase62(userId);
+    const shortRecordingId = uuidToBase62(recordingId);
+    return `${baseUrl}/share/${shortUserId}/${shortRecordingId}`;
+  },
+
+  // Get original UUIDs from short IDs
+  getOriginalIds: (shortUserId, shortRecordingId) => {
+    return {
+      userId: base62ToUuid(shortUserId),
+      recordingId: base62ToUuid(shortRecordingId)
+    };
   }
 };
 

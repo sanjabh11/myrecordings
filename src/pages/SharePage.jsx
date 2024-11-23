@@ -5,59 +5,27 @@ import styles from './SharePage.module.css';
 
 const SharePage = () => {
   const { userId, recordingId } = useParams();
-  const [recording, setRecording] = useState(null);
+  const [audioUrl, setAudioUrl] = useState(null);
   const [error, setError] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [audio, setAudio] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadSharedRecording();
-    return () => {
-      if (audio) {
-        audio.pause();
-        audio.src = '';
+    const loadSharedRecording = async () => {
+      try {
+        setIsLoading(true);
+        const { userId: originalUserId, recordingId: originalRecordingId } = storageHelpers.getOriginalIds(userId, recordingId);
+        const url = await storageHelpers.getSharedRecordingUrl(originalUserId, originalRecordingId);
+        setAudioUrl(url);
+      } catch (error) {
+        console.error('Error loading shared recording:', error);
+        setError('Failed to load the shared recording');
+      } finally {
+        setIsLoading(false);
       }
     };
+
+    loadSharedRecording();
   }, [userId, recordingId]);
-
-  const loadSharedRecording = async () => {
-    try {
-      const { data, error } = await storageHelpers.getSharedRecording(userId, recordingId);
-      if (error) throw new Error(error);
-      if (!data) throw new Error('Recording not found');
-      setRecording(data);
-    } catch (err) {
-      console.error('Error loading shared recording:', err);
-      setError(err.message || 'Failed to load recording');
-    }
-  };
-
-  const handlePlay = async () => {
-    try {
-      if (!recording) return;
-
-      if (isPlaying && audio) {
-        audio.pause();
-        audio.currentTime = 0;
-        setIsPlaying(false);
-        return;
-      }
-
-      if (!audio) {
-        const newAudio = new Audio(recording.url);
-        newAudio.onended = () => setIsPlaying(false);
-        setAudio(newAudio);
-        await newAudio.play();
-      } else {
-        await audio.play();
-      }
-      
-      setIsPlaying(true);
-    } catch (err) {
-      console.error('Error playing recording:', err);
-      setError('Failed to play recording');
-    }
-  };
 
   if (error) {
     return (
@@ -74,17 +42,19 @@ const SharePage = () => {
     <div className={styles.sharePage}>
       <div className={styles.container}>
         <h1>Shared Recording</h1>
-        {recording ? (
-          <div className={styles.player}>
-            <button
-              className={`${styles.playButton} ${isPlaying ? styles.playing : ''}`}
-              onClick={handlePlay}
-            >
-              {isPlaying ? '⏹️ Stop' : '▶️ Play'}
-            </button>
-          </div>
-        ) : (
+        {isLoading ? (
           <div className={styles.loading}>Loading recording...</div>
+        ) : (
+          <div className={styles.player}>
+            {audioUrl ? (
+              <audio controls>
+                <source src={audioUrl} type="audio/mpeg" />
+                Your browser does not support the audio element.
+              </audio>
+            ) : (
+              <div>No recording found.</div>
+            )}
+          </div>
         )}
       </div>
     </div>
