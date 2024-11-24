@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import PlaybackControls from '../components/recording/PlaybackControls';
 import { storageHelpers } from '../services/supabaseClient';
 import '../styles/SharedRecording.css';
@@ -60,9 +60,9 @@ const SharedRecording = () => {
     <div className="shared-recording-container">
       <div className="shared-recording-header">
         <h1>Sing-A-Song</h1>
-        <Link to="https://sing-a-song.netlify.app/" className="return-link">
+        <a href="https://sing-a-song.netlify.app/" className="return-link">
           Return to Homepage
-        </Link>
+        </a>
       </div>
       {isLoading ? (
         <div className="loading">
