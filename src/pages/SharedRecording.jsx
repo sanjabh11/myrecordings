@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import PlaybackControls from '../components/recording/PlaybackControls';
 import { storageHelpers } from '../services/supabaseClient';
 import '../styles/SharedRecording.css';
@@ -56,50 +56,42 @@ const SharedRecording = () => {
     }
   }, [userId, recordingId]);
 
-  if (isLoading) {
-    return (
-      <div className="shared-recording-container">
+  return (
+    <div className="shared-recording-container">
+      <div className="shared-recording-header">
+        <h1>Sing-A-Song</h1>
+        <Link to="https://sing-a-song.netlify.app/" className="return-link">
+          Return to Homepage
+        </Link>
+      </div>
+      {isLoading ? (
         <div className="loading">
           Loading recording...
         </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="shared-recording-container">
+      ) : error ? (
         <div className="error-message">
           {error}
         </div>
-      </div>
-    );
-  }
-
-  if (!recording) {
-    return (
-      <div className="shared-recording-container">
+      ) : !recording ? (
         <div className="error-message">
           Recording not found
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="shared-recording-container">
-      <div className="recording-details">
-        <h1>{recording.name}</h1>
-        <div className="metadata">
-          <p>Created: {new Date(recording.createdAt).toLocaleString()}</p>
-          <p>Size: {(recording.metadata.size / 1024).toFixed(2)} KB</p>
-          <p>Type: {recording.metadata.type}</p>
+      ) : (
+        <div>
+          <div className="recording-details">
+            <h1>{recording.name}</h1>
+            <div className="metadata">
+              <p>Created: {new Date(recording.createdAt).toLocaleString()}</p>
+              <p>Size: {(recording.metadata.size / 1024).toFixed(2)} KB</p>
+              <p>Type: {recording.metadata.type}</p>
+            </div>
+          </div>
+          
+          <div className="playback-section">
+            <PlaybackControls audioBlob={recording.blob} />
+          </div>
         </div>
-      </div>
-      
-      <div className="playback-section">
-        <PlaybackControls audioBlob={recording.blob} />
-      </div>
+      )}
     </div>
   );
 };
