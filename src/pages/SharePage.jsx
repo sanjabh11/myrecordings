@@ -42,10 +42,15 @@ const SharePage = () => {
   if (error) {
     return (
       <div className={styles.sharePage}>
+        <header className={styles.header}>
+          <a href="https://sing-a-song.netlify.app" className={styles.homeLink}>
+            <h2>Sing-A-Song</h2>
+            <span>Return to Homepage</span>
+          </a>
+        </header>
         <div className={styles.errorContainer}>
           <h1>Unable to Play Recording</h1>
           <p className={styles.errorMessage}>{error}</p>
-          <a href="/" className={styles.homeLink}>Go to Home</a>
         </div>
       </div>
     );
@@ -53,6 +58,12 @@ const SharePage = () => {
 
   return (
     <div className={styles.sharePage}>
+      <header className={styles.header}>
+        <a href="https://sing-a-song.netlify.app" className={styles.homeLink}>
+          <h2>Sing-A-Song</h2>
+          <span>Return to Homepage</span>
+        </a>
+      </header>
       <div className={styles.container}>
         <h1>Shared Recording</h1>
         {isLoading ? (
