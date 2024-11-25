@@ -89,29 +89,30 @@ const storageHelpers = {
   // Get a shared recording URL
   getSharedRecordingUrl: async (userId, recordingId) => {
     try {
-      // Try both .webm and .mp3 extensions
       const extensions = ['.webm', '.mp3'];
       let url = null;
 
       for (const ext of extensions) {
         const filePath = `${userId}/${recordingId}${ext}`;
         console.log('Trying path:', filePath);
-        
-        // Check if the file exists
-        const { data: files } = await getStorageClient().list(userId + '/', {
-          search: recordingId + ext
-        });
 
-        if (files && files.length > 0) {
-          const { data } = getStorageClient().getPublicUrl(filePath);
-          url = data.publicUrl;
-          console.log('Found URL:', url);
-          break;
+        // Get the public URL directly
+        const { data: { publicUrl } } = await getStorageClient().getPublicUrl(filePath);
+
+        // Check if the file exists by making a HEAD request
+        try {
+          const response = await fetch(publicUrl, { method: 'HEAD' });
+          if (response.ok) {
+            url = publicUrl;
+            console.log('Found URL:', url);
+            break;
+          }
+        } catch (err) {
+          console.log('File not found with extension:', ext);
         }
       }
 
       if (!url) {
-        console.error('Recording not found for:', { userId, recordingId });
         throw new Error('Recording not found');
       }
 

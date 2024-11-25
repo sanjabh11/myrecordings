@@ -1,104 +1,308 @@
 .sharePage {
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #f5f5f5;
-  padding: 1rem;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e7eb 100%);
+  padding: 2rem 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.musicalBackground {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+  background-image: 
+    repeating-linear-gradient(45deg, 
+      rgba(200, 216, 235, 0.1) 0px,
+      rgba(200, 216, 235, 0.1) 2px,
+      transparent 2px,
+      transparent 10px
+    ),
+    radial-gradient(
+      circle at 50% 50%,
+      rgba(74, 144, 226, 0.03) 0%,
+      transparent 50%
+    );
 }
 
 .container {
-  background: white;
+  max-width: 800px;
+  margin: 0 auto;
   padding: 2rem;
+  background: white;
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 600px;
+  position: relative;
+  z-index: 2;
+}
+
+.header {
+  max-width: 1200px;
+  margin: 0 auto 2rem;
+  padding: 1rem;
   text-align: center;
 }
 
-.container h1 {
-  margin-bottom: 2rem;
-  color: #333;
-  font-size: 1.8rem;
+.homeLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: #2d5a9e;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
 }
 
-.player {
+.homeLink:hover {
+  background: white;
+  transform: translateY(-2px);
+}
+
+.homeLink h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.homeLink span {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.headerText {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 1rem;
-  width: 100%;
+  text-align: left;
 }
 
-.audioPlayer {
-  width: 100%;
-  margin: 1rem 0;
+.headerText h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #2d5a9e;
 }
 
-.playButton {
-  background-color: #4a9eff;
-  color: white;
-  border: none;
-  padding: 1rem 2rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.2s;
+.headerText span {
+  font-size: 0.9rem;
+  color: #4a90e2;
 }
 
-.playButton:hover {
-  background-color: #1976d2;
+.micIcon {
+  font-size: 1.5rem;
+  margin-right: 0.5rem;
 }
 
-.playButton.playing {
-  background-color: #dc3545;
+.recordingMessage {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #4a90e2;
 }
 
-.playButton.playing:hover {
-  background-color: #c82333;
+.recordingMessage p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #4a90e2;
+}
+
+.musicNote {
+  display: inline-block;
+  font-size: 1.2rem;
+  margin-left: 0.5rem;
+  animation: bounce 2s infinite;
+}
+
+.recordingTitleSection {
+  text-align: center;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.recordingMicIcon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  display: inline-block;
+  animation: bounce 2s infinite;
+}
+
+.recordingTitleSection h1 {
+  margin: 0.5rem 0;
+  color: #2d5a9e;
+  font-size: 2rem;
+}
+
+.recordingTitleSection p {
+  color: #666;
+  margin: 0.5rem 0;
+}
+
+.floatingNote {
+  position: absolute;
+  font-size: 2rem;
+  color: rgba(74, 144, 226, 0.2);
+  animation: float 20s linear infinite;
+}
+
+.floatingNote:nth-child(1) {
+  left: 10%;
+  animation-delay: -5s;
+}
+
+.floatingNote:nth-child(2) {
+  left: 50%;
+  animation-delay: -10s;
+}
+
+.floatingNote:nth-child(3) {
+  left: 80%;
+  animation-delay: -15s;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(100vh) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.5;
+  }
+  90% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-100px) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #4a90e2;
+  border-radius: 50%;
+  margin: 0 auto 1rem;
+  animation: spin 1s linear infinite;
 }
 
 .errorContainer {
   text-align: center;
   padding: 2rem;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  max-width: 500px;
-  width: 90%;
+  color: #dc3545;
 }
 
 .errorContainer h1 {
-  color: #dc3545;
-  margin-bottom: 1rem;
   font-size: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .errorMessage {
-  color: #666;
-  margin-bottom: 1.5rem;
-  line-height: 1.5;
+  color: #dc3545;
+  background: #ffebee;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-top: 0.5rem;
 }
 
-.homeLink {
-  display: inline-block;
-  padding: 0.75rem 1.5rem;
-  background-color: #007bff;
+.playerSection {
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.waveformContainer {
+  background: rgba(74, 144, 226, 0.05);
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  min-height: 80px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+  justify-content: center;
+}
+
+.playButton {
+  width: 48px;
+  height: 48px;
+  border: none;
+  border-radius: 50%;
+  background: #4a90e2;
   color: white;
-  text-decoration: none;
-  border-radius: 6px;
-  transition: background-color 0.2s;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
 }
 
-.homeLink:hover {
-  background-color: #0056b3;
+.playButton:hover {
+  background: #357abd;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
 }
 
-.loading {
+.playButton.playing {
+  background: #dc3545;
+}
+
+.timeDisplay {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
   color: #666;
-  font-size: 1.1rem;
-  margin: 2rem 0;
+  font-family: monospace;
+}
+
+.recordingInfo {
+  text-align: center;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.recordingInfo p {
+  margin: 0.25rem 0;
+}
+
+.callToAction {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(74, 144, 226, 0.1);
+}
+
+.recordButton {
+  display: inline-block;
+  background: #4a90e2;
+  color: white;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  text-decoration: none;
+  margin-top: 1rem;
+  transition: all 0.3s ease;
+}
+
+.recordButton:hover {
+  background: #357abd;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
 }
 
 .noRecording {
@@ -107,4 +311,63 @@
   border: 2px dashed #ddd;
   border-radius: 8px;
   margin: 1rem 0;
+}
+
+.inspirationalText {
+  font-size: 1rem;
+  color: #666;
+  font-style: italic;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+
+  .recordingTitleSection h1 {
+    font-size: 1.5rem;
+  }
+
+  .controls {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .timeDisplay {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .sharePage {
+    padding: 1rem 0.5rem;
+  }
+
+  .container {
+    padding: 1rem 0.5rem;
+  }
+
+  .homeLink {
+    font-size: 0.9rem;
+  }
+
+  .recordingTitleSection h1 {
+    font-size: 1.25rem;
+  }
+
+  .playButton {
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
+  }
 }

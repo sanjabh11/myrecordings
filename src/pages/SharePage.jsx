@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import WaveSurfer from 'wavesurfer.js';
 import { useParams } from 'react-router-dom';
 import { storageHelpers } from '../services/supabaseClient';
 import styles from './SharePage.module.css';
@@ -6,8 +7,14 @@ import styles from './SharePage.module.css';
 const SharePage = () => {
   const { userId, recordingId } = useParams();
   const [audioUrl, setAudioUrl] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+
+  const waveformRef = useRef(null);
+  const wavesurferRef = useRef(null);
 
   useEffect(() => {
     const loadSharedRecording = async () => {
@@ -15,35 +22,76 @@ const SharePage = () => {
         setIsLoading(true);
         setError(null);
 
-        console.log('Loading recording with IDs:', { userId, recordingId });
-        const { userId: originalUserId, recordingId: originalRecordingId } = storageHelpers.getOriginalIds(userId, recordingId);
-        console.log('Original IDs:', { originalUserId, originalRecordingId });
-
+        const { userId: originalUserId, recordingId: originalRecordingId } = 
+          storageHelpers.getOriginalIds(userId, recordingId);
         const url = await storageHelpers.getSharedRecordingUrl(originalUserId, originalRecordingId);
-        console.log('Got URL:', url);
         setAudioUrl(url);
+
+        // Initialize WaveSurfer
+        if (waveformRef.current && !wavesurferRef.current) {
+          wavesurferRef.current = WaveSurfer.create({
+            container: waveformRef.current,
+            waveColor: '#4a90e2',
+            progressColor: '#2d5a9e',
+            cursorColor: '#2d5a9e',
+            barWidth: 2,
+            barGap: 1,
+            height: 80,
+            responsive: true,
+            normalize: true,
+            backend: 'WebAudio'
+          });
+
+          wavesurferRef.current.on('ready', () => {
+            setDuration(wavesurferRef.current.getDuration());
+            setIsLoading(false);
+          });
+
+          wavesurferRef.current.on('audioprocess', () => {
+            setCurrentTime(wavesurferRef.current.getCurrentTime());
+          });
+
+          wavesurferRef.current.on('finish', () => {
+            setIsPlaying(false);
+          });
+
+          wavesurferRef.current.load(url);
+        }
       } catch (error) {
         console.error('Error loading shared recording:', error);
-        if (error.message.includes('Failed to convert')) {
-          setError('Invalid share link. The link might be malformed or expired.');
-        } else if (error.message.includes('Recording not found')) {
-          setError('This recording has been deleted or is no longer available.');
-        } else {
-          setError('Failed to load the shared recording. Please try again later.');
-        }
+        setError('Failed to load the recording. Please try again later.');
       } finally {
         setIsLoading(false);
       }
     };
 
     loadSharedRecording();
+
+    return () => {
+      if (wavesurferRef.current) {
+        wavesurferRef.current.destroy();
+      }
+    };
   }, [userId, recordingId]);
+
+  const togglePlayPause = () => {
+    if (wavesurferRef.current) {
+      wavesurferRef.current.playPause();
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const formatTime = (time) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
 
   if (error) {
     return (
       <div className={styles.sharePage}>
         <header className={styles.header}>
-          <a href="https://sing-a-song.netlify.app" className={styles.homeLink}>
+          <a href="https://sing-a-song.netlify.app/record" className={styles.homeLink}>
             <h2>Sing-A-Song</h2>
             <span>Return to Homepage</span>
           </a>
@@ -58,27 +106,56 @@ const SharePage = () => {
 
   return (
     <div className={styles.sharePage}>
+      <div className={styles.musicalBackground}>
+        <div className={styles.floatingNote}>♪</div>
+        <div className={styles.floatingNote}>♫</div>
+        <div className={styles.floatingNote}>♬</div>
+      </div>
+
       <header className={styles.header}>
-        <a href="https://sing-a-song.netlify.app" className={styles.homeLink}>
-          <h2>Sing-A-Song</h2>
-          <span>Return to Homepage</span>
+        <a href="https://sing-a-song.netlify.app/record" className={styles.homeLink}>
+          <span className={styles.micIcon}>🎤</span>
+          <div className={styles.headerText}>
+            <h2>Sing-A-Song</h2>
+            <span>To Sing-A-Song click</span>
+          </div>
         </a>
       </header>
+
       <div className={styles.container}>
-        <h1>Shared Recording</h1>
+        <div className={styles.recordingTitleSection}>
+          <span className={styles.recordingMicIcon}>🎙️</span>
+          <h2>Shared Recording</h2>
+        </div>
+
+        <div className={styles.recordingMessage}>
+          <p>Experience the joy of music sharing!</p>
+          <span className={styles.musicNote}>♪</span>
+        </div>
+
         {isLoading ? (
-          <div className={styles.loading}>Loading recording...</div>
+          <div className={styles.loading}>
+            <div className={styles.loadingSpinner}></div>
+            <p>Loading your musical moment...</p>
+          </div>
         ) : (
-          <div className={styles.player}>
-            {audioUrl ? (
-              <audio controls className={styles.audioPlayer}>
-                <source src={audioUrl} type="audio/mpeg" />
-                <source src={audioUrl} type="audio/webm" />
-                Your browser does not support the audio element.
-              </audio>
-            ) : (
-              <div className={styles.noRecording}>No recording found.</div>
-            )}
+          <div className={styles.playerSection}>
+            <div className={styles.waveformContainer} ref={waveformRef}></div>
+
+            <div className={styles.controls}>
+              <button
+                className={`${styles.playButton} ${isPlaying ? styles.playing : ''}`}
+                onClick={togglePlayPause}
+              >
+                {isPlaying ? '⏸️' : '▶️'}
+              </button>
+
+              <div className={styles.timeDisplay}>
+                <span>{formatTime(currentTime)}</span>
+                <span>/</span>
+                <span>{formatTime(duration)}</span>
+              </div>
+            </div>
           </div>
         )}
       </div>
