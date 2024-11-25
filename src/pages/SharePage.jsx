@@ -114,13 +114,15 @@ const SharePage = () => {
     return (
       <div className={styles.sharePage}>
         <header className={styles.header}>
-          <a href="https://sing-a-song.netlify.app/record" className={styles.homeLink}>
+          <div className={styles.headerContent}>
             <span className={styles.micIcon}>🎤</span>
             <div className={styles.headerText}>
-              <h2>Sing-A-Song</h2>
-              <span>To Sing-A-Song click</span>
+              <a href="/record" className={styles.titleLink}>
+                <h2>Sing-A-Song</h2>
+              </a>
+              <div className={styles.subText}>To Sing-A-Song click here</div>
             </div>
-          </a>
+          </div>
         </header>
         <div className={styles.errorContainer}>
           <h1>Unable to Play Recording</h1>
@@ -139,13 +141,15 @@ const SharePage = () => {
       </div>
 
       <header className={styles.header}>
-        <a href="https://sing-a-song.netlify.app/record" className={styles.homeLink}>
+        <div className={styles.headerContent}>
           <span className={styles.micIcon}>🎤</span>
           <div className={styles.headerText}>
-            <h2>Sing-A-Song</h2>
-            <span>To Sing-A-Song click</span>
+            <a href="/record" className={styles.titleLink}>
+              <h2>Sing-A-Song</h2>
+            </a>
+            <div className={styles.subText}>To Sing-A-Song click here</div>
           </div>
-        </a>
+        </div>
       </header>
 
       <div className={styles.container}>

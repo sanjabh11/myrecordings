@@ -45,6 +45,42 @@
   text-align: center;
 }
 
+.headerContent {
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  position: relative;
+  z-index: 5;
+}
+
+.titleLink {
+  text-decoration: none;
+  color: #4a90e2;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  z-index: 10;
+  position: relative;
+  display: inline-block;
+}
+
+.titleLink:hover {
+  text-decoration: underline;
+}
+
+.titleLink h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #4a90e2;
+  pointer-events: auto;
+}
+
+.titleLink:hover h2 {
+  color: #2c5a9e;
+}
+
 .homeLink {
   display: inline-flex;
   align-items: center;
@@ -68,7 +104,11 @@
 }
 
 .headerText {
-  text-align: left;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
 }
 
 .headerText h2 {
@@ -77,9 +117,10 @@
   color: #2c3e50;
 }
 
-.headerText span {
+.subText {
   font-size: 0.9rem;
   color: #666;
+  margin-top: 0.25rem;
 }
 
 .waveformContainer {
@@ -373,95 +414,4 @@
   .controls {
     padding: 0.75rem;
   }
-  .waveformContainer {
-    background: rgba(74, 144, 226, 0.05);
-    padding: 1rem;
-    border-radius: 12px;
-    margin-bottom: 1rem;
-    min-height: 80px;
-    }
-    
-    .controls {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    background: rgba(74, 144, 226, 0.05);
-    border-radius: 12px;
-    margin-bottom: 1rem;
-    }
-    
-    .playButton {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    border: none;
-    background: #4a90e2;
-    color: white;
-    font-size: 1.5rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    }
-    
-    .playButton:hover {
-    background: #357abd;
-    transform: scale(1.05);
-    }
-    
-    .playButton.playing {
-    background: #dc3545;
-    }
-    
-    .timeDisplay {
-    font-family: monospace;
-    color: #666;
-    display: flex;
-    gap: 0.5rem;
-    }
-    
-    .homeLink {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    text-decoration: none;
-    color: #4a90e2;
-    padding: 0.75rem 1.5rem;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.9);
-    transition: all 0.3s ease;
-    }
-    
-    .homeLink:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.15);
-    }
-    
-    .micIcon {
-    font-size: 2rem;
-    animation: pulse 2s infinite ease-in-out;
-    }
-    
-    .headerText {
-    display: flex;
-    flex-direction: column;
-    }
-    
-    .headerText h2 {
-    margin: 0;
-    font-size: 1.5rem;
-    color: #2c3e50;
-    }
-    
-    .headerText span {
-    font-size: 0.9rem;
-    color: #666;
-    }
-    
-    @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    }
 }
