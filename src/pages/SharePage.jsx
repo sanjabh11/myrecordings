@@ -12,9 +12,11 @@ const SharePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const [isWaveformReady, setIsWaveformReady] = useState(false);
 
   const waveformRef = useRef(null);
   const wavesurferRef = useRef(null);
+  const audioUrlRef = useRef(null);
 
   useEffect(() => {
     const loadSharedRecording = async () => {
@@ -26,41 +28,11 @@ const SharePage = () => {
           storageHelpers.getOriginalIds(userId, recordingId);
         const url = await storageHelpers.getSharedRecordingUrl(originalUserId, originalRecordingId);
         setAudioUrl(url);
-
-        // Initialize WaveSurfer
-        if (waveformRef.current && !wavesurferRef.current) {
-          wavesurferRef.current = WaveSurfer.create({
-            container: waveformRef.current,
-            waveColor: '#4a90e2',
-            progressColor: '#2d5a9e',
-            cursorColor: '#2d5a9e',
-            barWidth: 2,
-            barGap: 1,
-            height: 80,
-            responsive: true,
-            normalize: true,
-            backend: 'WebAudio'
-          });
-
-          wavesurferRef.current.on('ready', () => {
-            setDuration(wavesurferRef.current.getDuration());
-            setIsLoading(false);
-          });
-
-          wavesurferRef.current.on('audioprocess', () => {
-            setCurrentTime(wavesurferRef.current.getCurrentTime());
-          });
-
-          wavesurferRef.current.on('finish', () => {
-            setIsPlaying(false);
-          });
-
-          wavesurferRef.current.load(url);
-        }
+        audioUrlRef.current = url;
+        setIsLoading(false);
       } catch (error) {
         console.error('Error loading shared recording:', error);
         setError('Failed to load the recording. Please try again later.');
-      } finally {
         setIsLoading(false);
       }
     };
@@ -74,10 +46,61 @@ const SharePage = () => {
     };
   }, [userId, recordingId]);
 
-  const togglePlayPause = () => {
-    if (wavesurferRef.current) {
-      wavesurferRef.current.playPause();
-      setIsPlaying(!isPlaying);
+  const initializeWaveSurfer = async () => {
+    if (!waveformRef.current || !audioUrlRef.current || wavesurferRef.current) return;
+
+    try {
+      wavesurferRef.current = WaveSurfer.create({
+        container: waveformRef.current,
+        waveColor: '#4a90e2',
+        progressColor: '#2d5a9e',
+        cursorColor: '#2d5a9e',
+        barWidth: 2,
+        barGap: 1,
+        height: 80,
+        responsive: true,
+        normalize: true,
+        backend: 'WebAudio'
+      });
+
+      wavesurferRef.current.on('ready', () => {
+        setDuration(wavesurferRef.current.getDuration());
+        setIsWaveformReady(true);
+      });
+
+      wavesurferRef.current.on('audioprocess', () => {
+        setCurrentTime(wavesurferRef.current.getCurrentTime());
+      });
+
+      wavesurferRef.current.on('finish', () => {
+        setIsPlaying(false);
+      });
+
+      wavesurferRef.current.on('error', (err) => {
+        console.error('WaveSurfer error:', err);
+        setError('Error loading audio waveform. Please try again.');
+      });
+
+      await wavesurferRef.current.load(audioUrlRef.current);
+    } catch (err) {
+      console.error('Error initializing WaveSurfer:', err);
+      setError('Error initializing audio player. Please try again.');
+    }
+  };
+
+  const togglePlayPause = async () => {
+    try {
+      if (!wavesurferRef.current) {
+        await initializeWaveSurfer();
+      }
+      
+      if (wavesurferRef.current) {
+        await wavesurferRef.current.playPause();
+        setIsPlaying(!isPlaying);
+      }
+    } catch (err) {
+      console.error('Error toggling playback:', err);
+      setError('Error playing audio. Please try again.');
     }
   };
 
@@ -92,8 +115,11 @@ const SharePage = () => {
       <div className={styles.sharePage}>
         <header className={styles.header}>
           <a href="https://sing-a-song.netlify.app/record" className={styles.homeLink}>
-            <h2>Sing-A-Song</h2>
-            <span>Return to Homepage</span>
+            <span className={styles.micIcon}>🎤</span>
+            <div className={styles.headerText}>
+              <h2>Sing-A-Song</h2>
+              <span>To Sing-A-Song click</span>
+            </div>
           </a>
         </header>
         <div className={styles.errorContainer}>
@@ -150,11 +176,13 @@ const SharePage = () => {
                 {isPlaying ? '⏸️' : '▶️'}
               </button>
 
-              <div className={styles.timeDisplay}>
-                <span>{formatTime(currentTime)}</span>
-                <span>/</span>
-                <span>{formatTime(duration)}</span>
-              </div>
+              {isWaveformReady && (
+                <div className={styles.timeDisplay}>
+                  <span>{formatTime(currentTime)}</span>
+                  <span>/</span>
+                  <span>{formatTime(duration)}</span>
+                </div>
+              )}
             </div>
           </div>
         )}
