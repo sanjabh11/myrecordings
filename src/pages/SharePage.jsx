@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 import { useParams } from 'react-router-dom';
-import { storageHelpers } from '../services/supabaseClient';
+import { storageHelpers, supabase } from '../services/supabaseClient';
 import styles from './SharePage.module.css';
+import { FaWhatsapp, FaTwitter, FaFacebook, FaShare, FaPause, FaPlay } from 'react-icons/fa';
+import { MdContentCopy } from 'react-icons/md';
+import { Link } from 'react-router-dom';
 
 const SharePage = () => {
   const { userId, recordingId } = useParams();
@@ -13,6 +16,8 @@ const SharePage = () => {
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [isWaveformReady, setIsWaveformReady] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   const waveformRef = useRef(null);
   const wavesurferRef = useRef(null);
@@ -110,18 +115,39 @@ const SharePage = () => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  const handleShare = () => {
+    setShowShareModal(true);
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error('Copy failed:', err);
+    }
+  };
+
+  const shareOnWhatsApp = () => {
+    const text = encodeURIComponent(`Check out this recording on Sing-A-Song!\n${window.location.href}`);
+    window.open(`https://web.whatsapp.com/send?text=${text}`, '_blank');
+  };
+
   if (error) {
     return (
       <div className={styles.sharePage}>
         <header className={styles.header}>
           <div className={styles.headerContent}>
-            <span className={styles.micIcon}>🎤</span>
-            <div className={styles.headerText}>
-              <a href="/record" className={styles.titleLink}>
-                <h2>Sing-A-Song</h2>
-              </a>
-              <div className={styles.subText}>To Sing-A-Song click here</div>
-            </div>
+            <Link to="/" className={styles.logo}>
+              <span className={styles.micIcon}>🎤</span>
+              <h1>Sing-A-Song</h1>
+            </Link>
+            <nav className={styles.nav}>
+              <Link to="/record" className={styles.recordButton}>
+                Record Your Own
+              </Link>
+            </nav>
           </div>
         </header>
         <div className={styles.errorContainer}>
@@ -134,21 +160,17 @@ const SharePage = () => {
 
   return (
     <div className={styles.sharePage}>
-      <div className={styles.musicalBackground}>
-        <div className={styles.floatingNote}>♪</div>
-        <div className={styles.floatingNote}>♫</div>
-        <div className={styles.floatingNote}>♬</div>
-      </div>
-
       <header className={styles.header}>
         <div className={styles.headerContent}>
-          <span className={styles.micIcon}>🎤</span>
-          <div className={styles.headerText}>
-            <a href="/record" className={styles.titleLink}>
-              <h2>Sing-A-Song</h2>
-            </a>
-            <div className={styles.subText}>To Sing-A-Song click here</div>
-          </div>
+          <Link to="/" className={styles.logo}>
+            <span className={styles.micIcon}>🎤</span>
+            <h1>Sing-A-Song</h1>
+          </Link>
+          <nav className={styles.nav}>
+            <Link to="/record" className={styles.recordButton}>
+              Record Your Own
+            </Link>
+          </nav>
         </div>
       </header>
 
@@ -172,21 +194,90 @@ const SharePage = () => {
           <div className={styles.playerSection}>
             <div className={styles.waveformContainer} ref={waveformRef}></div>
 
-            <div className={styles.controls}>
-              <button
-                className={`${styles.playButton} ${isPlaying ? styles.playing : ''}`}
-                onClick={togglePlayPause}
-              >
-                {isPlaying ? '⏸️' : '▶️'}
-              </button>
+            <div className={styles.controlsWrapper}>
+              <div className={styles.mainControls}>
+                <button
+                  className={`${styles.playButton} ${isPlaying ? styles.playing : ''}`}
+                  onClick={togglePlayPause}
+                >
+                  {isPlaying ? <FaPause /> : <FaPlay />}
+                </button>
 
-              {isWaveformReady && (
-                <div className={styles.timeDisplay}>
-                  <span>{formatTime(currentTime)}</span>
-                  <span>/</span>
-                  <span>{formatTime(duration)}</span>
+                {isWaveformReady && (
+                  <div className={styles.timeDisplay}>
+                    <span>{formatTime(currentTime)}</span>
+                    <span>/</span>
+                    <span>{formatTime(duration)}</span>
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.actionButtons}>
+                <button className={styles.actionButton} onClick={handleShare}>
+                  <FaShare />
+                  <span>Share</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className={styles.ctaSection}>
+          <h3>Want to create your own recording?</h3>
+          <p>Join Sing-A-Song and start sharing your voice with the world!</p>
+          <div className={styles.ctaButtons}>
+            <Link to="/signup" className={styles.primaryButton}>
+              Sign Up Free
+            </Link>
+            <Link to="/record" className={styles.secondaryButton}>
+              Try Recording
+            </Link>
+          </div>
+        </div>
+
+        {showShareModal && (
+          <div className={styles.modalOverlay}>
+            <div className={styles.shareModal}>
+              <h3>Share Recording</h3>
+              <div className={styles.shareOptions}>
+                <div className={styles.shareLink}>
+                  <input
+                    type="text"
+                    value={window.location.href}
+                    readOnly
+                  />
+                  <button onClick={copyToClipboard}>
+                    <MdContentCopy />
+                    {copySuccess ? 'Copied!' : 'Copy'}
+                  </button>
                 </div>
-              )}
+                <div className={styles.socialShare}>
+                  <button 
+                    className={styles.shareButton}
+                    onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent('Check out this recording on Sing-A-Song!')}`, '_blank')}
+                  >
+                    <FaTwitter /> Share on Twitter
+                  </button>
+                  <button 
+                    className={styles.shareButton}
+                    onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank')}
+                  >
+                    <FaFacebook /> Share on Facebook
+                  </button>
+                  <button 
+                    className={styles.shareButton}
+                    onClick={shareOnWhatsApp}
+                  >
+                    <FaWhatsapp /> Share on WhatsApp
+                  </button>
+                </div>
+              </div>
+              <button 
+                className={styles.closeButton}
+                onClick={() => setShowShareModal(false)}
+              >
+                Close
+              </button>
             </div>
           </div>
         )}

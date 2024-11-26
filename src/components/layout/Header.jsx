@@ -24,22 +24,20 @@ const Header = () => {
             {user ? (
               <>
                 <li><Link to="/record" className="cta-button">Start Recording</Link></li>
+                <li><Link to="/account" className="text-gray-600 hover:text-primary-600 transition-colors">My Account</Link></li>
                 <li>
                   <button
                     onClick={handleSignOut}
                     className="text-gray-600 hover:text-primary-600 transition-colors"
                   >
-                    Sign Out
+                    Logout
                   </button>
                 </li>
               </>
             ) : (
               <>
-                <li><Link to="/login">Sign In</Link></li>
-                <li><Link to="/signup">Sign Up</Link></li>
-                <li><Link to="#pricing">Pricing</Link></li>
-                <li><Link to="#help">Help</Link></li>
-                <li><Link to="/record" className="cta-button">Start Recording</Link></li>
+                <li><Link to="/login" className="text-gray-600 hover:text-primary-600 transition-colors">Login</Link></li>
+                <li><Link to="/signup" className="cta-button">Sign Up</Link></li>
               </>
             )}
           </ul>

@@ -2,9 +2,17 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
-import { FaMicrophone, FaShare, FaLock, FaClock, FaMusic } from 'react-icons/fa';
+import { FaMicrophone, FaShare, FaLock, FaClock, FaMusic, FaCloud, FaUsers } from 'react-icons/fa';
+import { useAuth } from '../contexts/AuthContext';
+import Spinner from '../components/common/Spinner';
 
 const Home = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <Spinner />;
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-white to-blue-50">
       <Header />
@@ -21,10 +29,12 @@ const Home = () => {
           <div className="container mx-auto px-4 py-16 md:py-24 relative z-10">
             <div className="text-center">
               <h1 className="text-5xl md:text-6xl font-bold text-center mb-6 text-gray-900">
-                Unleash Your Inner Voice and Share with the World
+                {user ? 'Welcome Back to Your Recording Studio' : 'Unleash Your Inner Voice and Share with the World'}
               </h1>
               <p className="text-xl md:text-2xl text-center mb-12 text-gray-600 max-w-3xl mx-auto">
-                Record up to 2 minutes of audio effortlessly
+                {user 
+                  ? 'Continue creating amazing recordings and sharing them with the world'
+                  : 'Sign up to save your recordings in the cloud and share them with friends!'}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <Link 
@@ -34,12 +44,15 @@ const Home = () => {
                   <FaMicrophone />
                   Start Recording
                 </Link>
-                <Link 
-                  to="/login" 
-                  className="secondary-button flex items-center gap-2 text-lg"
-                >
-                  Try Premium Features
-                </Link>
+                {!user && (
+                  <Link 
+                    to="/signup" 
+                    className="secondary-button flex items-center gap-2 text-lg"
+                  >
+                    <FaCloud />
+                    Create Free Account
+                  </Link>
+                )}
               </div>
             </div>
           </div>
@@ -48,56 +61,42 @@ const Home = () => {
         <section className="py-24 bg-white" id="features">
           <div className="container mx-auto px-4">
             <h2 className="text-4xl font-bold text-center mb-16 text-gray-900">
-              Why Choose Sing-A-Song?
+              Premium Features
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid md:grid-cols-3 gap-8">
               <div className="feature-card">
                 <div className="icon-wrapper">
-                  <FaClock className="feature-icon" />
+                  <FaCloud className="text-4xl text-primary-600" />
                 </div>
-                <h3>Quick & Easy</h3>
-                <p>Record up to 2 minutes of high-quality audio instantly</p>
+                <h3 className="text-xl font-semibold mb-2">Cloud Storage</h3>
+                <p>Save all your recordings securely in the cloud and access them from anywhere.</p>
               </div>
               <div className="feature-card">
                 <div className="icon-wrapper">
-                  <FaShare className="feature-icon" />
+                  <FaShare className="text-4xl text-primary-600" />
                 </div>
-                <h3>Share Instantly</h3>
-                <p>Share your recordings with friends and family via link</p>
+                <h3 className="text-xl font-semibold mb-2">Easy Sharing</h3>
+                <p>Share your recordings with friends and family with just one click.</p>
               </div>
               <div className="feature-card">
                 <div className="icon-wrapper">
-                  <FaLock className="feature-icon" />
+                  <FaUsers className="text-4xl text-primary-600" />
                 </div>
-                <h3>Secure Storage</h3>
-                <p>Your recordings are safely stored and protected</p>
-              </div>
-              <div className="feature-card">
-                <div className="icon-wrapper">
-                  <FaMicrophone className="feature-icon" />
-                </div>
-                <h3>Professional Quality</h3>
-                <p>Crystal clear audio recording and playback</p>
+                <h3 className="text-xl font-semibold mb-2">Collaboration</h3>
+                <p>Collaborate with others and create amazing content together.</p>
               </div>
             </div>
-          </div>
-        </section>
-
-        <section className="py-24 bg-gradient-to-r from-primary to-secondary text-white">
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-4xl font-bold mb-8">Ready to Start Recording?</h2>
-            <p className="text-xl mb-12 opacity-90">Join thousands of users who trust Sing-A-Song</p>
-            <Link 
-              to="/record" 
-              className="inline-flex items-center gap-2 bg-white text-primary px-8 py-4 rounded-lg font-semibold hover:bg-opacity-90 transition-all transform hover:-translate-y-1"
-            >
-              <FaMicrophone />
-              Start Recording Now
-            </Link>
+            {!user && (
+              <div className="text-center mt-12">
+                <Link to="/signup" className="primary-button inline-flex items-center gap-2">
+                  <FaLock />
+                  Unlock All Features
+                </Link>
+              </div>
+            )}
           </div>
         </section>
       </main>
-
       <Footer />
     </div>
   );
