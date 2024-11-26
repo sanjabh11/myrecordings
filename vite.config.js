@@ -4,10 +4,6 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
-  server: {
-    port: 3000,
-    strictPort: true,
-  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -23,6 +19,10 @@ export default defineConfig({
       }
     }
   },
+  server: {
+    port: 3000,
+    open: true
+  },
   esbuild: {
     loader: "jsx",
     include: /src\/.*\.jsx?$/,
@@ -35,4 +35,4 @@ export default defineConfig({
       },
     },
   },
-})
+}) 

@@ -21,8 +21,6 @@ const Header = () => {
           <ul className="flex items-center gap-8">
             <li><Link to="/">Home</Link></li>
             <li><Link to="#features">Features</Link></li>
-            <li><Link to="#pricing">Pricing</Link></li>
-            <li><Link to="#help">Help</Link></li>
             {user ? (
               <>
                 <li><Link to="/record" className="cta-button">Start Recording</Link></li>
@@ -39,6 +37,8 @@ const Header = () => {
               <>
                 <li><Link to="/login">Sign In</Link></li>
                 <li><Link to="/signup">Sign Up</Link></li>
+                <li><Link to="#pricing">Pricing</Link></li>
+                <li><Link to="#help">Help</Link></li>
                 <li><Link to="/record" className="cta-button">Start Recording</Link></li>
               </>
             )}

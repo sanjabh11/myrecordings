@@ -6,11 +6,15 @@
   body {
     @apply bg-gray-50;
   }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight;
+  }
 }
 
 @layer components {
   .hero {
-    @apply bg-gradient-to-r from-primary to-secondary text-white py-24 px-8 text-center;
+    @apply bg-gradient-to-r from-primary to-secondary text-white py-24 px-8 text-center relative overflow-hidden;
   }
 
   .hero h1 {
@@ -26,11 +30,11 @@
   }
 
   .primary-button {
-    @apply px-6 py-3 bg-white text-primary rounded-lg font-semibold hover:bg-gray-100 transition-colors;
+    @apply px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-dark transition-all transform hover:-translate-y-1;
   }
 
   .secondary-button {
-    @apply px-6 py-3 bg-primary-dark text-white rounded-lg font-semibold hover:bg-primary transition-colors;
+    @apply px-6 py-3 bg-white text-primary border-2 border-primary rounded-lg font-semibold hover:bg-primary hover:text-white transition-all transform hover:-translate-y-1;
   }
 
   .features {
@@ -46,19 +50,46 @@
   }
 
   .feature-card {
-    @apply bg-white p-8 rounded-xl shadow-lg text-center hover:shadow-xl transition-shadow;
+    @apply p-6 rounded-xl bg-white shadow-lg hover:shadow-xl transition-shadow;
   }
 
-  .feature-card .icon {
-    @apply text-4xl mb-4 block;
+  .feature-card .icon-wrapper {
+    @apply w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 mx-auto;
+  }
+
+  .feature-card .feature-icon {
+    @apply w-6 h-6 text-primary;
   }
 
   .feature-card h3 {
-    @apply text-xl font-semibold mb-2 text-gray-800;
+    @apply text-xl font-semibold text-gray-900 text-center mb-2;
   }
 
   .feature-card p {
-    @apply text-gray-600;
+    @apply text-gray-600 text-center;
+  }
+
+  .floating-notes {
+    @apply absolute inset-0 overflow-hidden pointer-events-none;
+  }
+
+  .floating-notes svg {
+    @apply absolute text-primary/20;
+  }
+
+  .note-1 {
+    @apply text-4xl top-1/4 left-1/4 animate-float;
+    animation-delay: 0s;
+  }
+
+  .note-2 {
+    @apply text-5xl top-1/3 right-1/4 animate-float;
+    animation-delay: 1s;
+  }
+
+  .note-3 {
+    @apply text-3xl bottom-1/4 left-1/3 animate-float;
+    animation-delay: 2s;
   }
 
   .header {
@@ -66,7 +97,7 @@
   }
 
   .header .logo {
-    @apply text-2xl font-bold text-primary;
+    @apply text-2xl font-bold text-primary-600;
   }
 
   .header nav ul {
@@ -74,11 +105,11 @@
   }
 
   .header nav a {
-    @apply text-gray-600 hover:text-primary transition-colors;
+    @apply text-gray-600 hover:text-primary-600 transition-colors;
   }
 
   .header nav a.cta-button {
-    @apply px-4 py-2 bg-primary rounded-lg hover:bg-primary-dark;
+    @apply px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700;
   }
 
   footer {
@@ -94,7 +125,7 @@
   }
 
   .footer-links a {
-    @apply text-gray-600 hover:text-primary transition-colors;
+    @apply text-gray-600 hover:text-primary-600 transition-colors;
   }
 
   /* Recording List Styles */
@@ -111,7 +142,7 @@
   }
 
   .recording-card {
-    @apply bg-white border border-gray-200 rounded-lg p-4 flex justify-between items-center hover:border-primary transition-colors;
+    @apply bg-white border border-gray-200 rounded-lg p-4 flex justify-between items-center hover:border-primary-300 transition-colors;
   }
 
   .recording-info h3 {
@@ -131,7 +162,7 @@
   }
 
   .play-button {
-    @apply px-4 py-2 bg-primary rounded-md hover:bg-primary-dark transition-colors;
+    @apply px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors;
   }
 
   .delete-button {
@@ -139,7 +170,7 @@
   }
 
   .record-button {
-    @apply w-20 h-20 rounded-full bg-primary hover:bg-primary-dark transition-colors flex items-center justify-center text-white relative;
+    @apply w-20 h-20 rounded-full bg-primary-600 hover:bg-primary-700 transition-colors flex items-center justify-center text-white relative;
   }
 
   .record-button.recording {
@@ -148,23 +179,33 @@
   }
 
   .btn-primary {
-    @apply px-4 py-2 bg-primary rounded-md hover:bg-primary-dark transition-colors;
+    @apply px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors;
   }
   
   .btn-secondary {
-    @apply px-4 py-2 bg-secondary rounded-md hover:bg-secondary-dark transition-colors;
+    @apply px-4 py-2 bg-secondary-600 text-white rounded-md hover:bg-secondary-700 transition-colors;
   }
   
   .input-field {
-    @apply rounded-md border-gray-300 shadow-sm focus:ring-primary focus:border-primary;
+    @apply rounded-md border-gray-300 shadow-sm focus:ring-primary-500 focus:border-primary-500;
   }
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
+/* Mobile Optimizations */
+@media (max-width: 640px) {
+  .hero {
+    @apply py-16 px-4;
   }
-  50% {
-    opacity: .8;
+
+  .hero h1 {
+    @apply text-4xl;
+  }
+
+  .hero p {
+    @apply text-lg;
+  }
+
+  .feature-card {
+    @apply mx-4;
   }
 }
