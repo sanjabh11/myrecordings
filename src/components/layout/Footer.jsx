@@ -5,7 +5,7 @@ const Footer = () => {
   return (
     <footer>
       <div className="footer-content">
-        <p className="text-gray-600">© 2024 RecordNow by Ignite Consulting. All rights reserved.</p>
+        <p className="text-gray-600"> RecordNow 2024-25 by @ Ignite Consulting. All rights reserved.</p>
         <div className="footer-links">
           <Link to="/privacy">Privacy Policy</Link>
           <Link to="/terms">Terms of Use</Link>

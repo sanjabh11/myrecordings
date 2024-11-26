@@ -130,6 +130,10 @@ const useAnonymousStorage = () => {
       throw new Error('Storage not initialized');
     }
 
+    if (!blob || !(blob instanceof Blob)) {
+      throw new Error('Invalid recording data');
+    }
+
     const currentDate = new Date();
     const validRecordings = recordings.filter(recording => {
       const expiryDate = new Date(recording.expiresAt);
@@ -141,12 +145,20 @@ const useAnonymousStorage = () => {
     }
 
     try {
+      // Convert blob to base64
       const base64data = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
+        reader.onerror = (error) => reject(new Error('Failed to read audio data: ' + error.message));
+        if (blob.size === 0) {
+          reject(new Error('Recording is empty'));
+        }
         reader.readAsDataURL(blob);
       });
+
+      if (!base64data) {
+        throw new Error('Failed to convert recording to base64');
+      }
 
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + RETENTION_DAYS);
@@ -158,6 +170,7 @@ const useAnonymousStorage = () => {
         createdAt: currentDate.toISOString(),
         expiresAt: expiryDate.toISOString(),
         size: blob.size,
+        mimeType: blob.type || 'audio/webm;codecs=opus',
         ...metadata
       };
 
@@ -166,10 +179,11 @@ const useAnonymousStorage = () => {
       );
       
       await saveToStorage(updatedRecordings);
+      console.log('Saved recordings:', updatedRecordings.length);
       return newRecording;
     } catch (err) {
       console.error('Error adding recording:', err);
-      throw new Error('Failed to save recording');
+      throw new Error('Failed to save recording: ' + err.message);
     }
   };
 

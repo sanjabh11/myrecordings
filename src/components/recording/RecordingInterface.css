@@ -1,8 +1,5 @@
 .recording-interface {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 2rem;
+  @apply flex flex-col items-center justify-center gap-6 p-8;
   max-width: 800px;
   margin: 0 auto;
 }
@@ -17,9 +14,15 @@
 }
 
 .waveform {
+  @apply relative overflow-hidden;
   width: 100%;
   height: 80px;
   background: transparent;
+}
+
+.waveform::before {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-r from-primary/5 to-secondary/5;
 }
 
 #timeline {
@@ -40,7 +43,9 @@
 }
 
 .record-button {
-  padding: 1rem 2rem;
+  @apply relative flex items-center justify-center;
+  width: 80px;
+  height: 80px;
   border: none;
   border-radius: 8px;
   background-color: var(--primary-color, #4a9eff);
@@ -50,14 +55,21 @@
   transition: all 0.2s ease;
 }
 
-.record-button:hover:not(.disabled) {
-  background-color: var(--secondary-color, #1976d2);
-  transform: translateY(-1px);
+.record-button::before {
+  content: '';
+  @apply absolute inset-0 bg-primary/20 rounded-full transform scale-0 transition-transform;
+}
+
+.record-button:hover::before {
+  @apply scale-125;
+}
+
+.record-button.recording::before {
+  @apply scale-125 animate-pulse;
 }
 
 .record-button.recording {
   background-color: #dc3545;
-  animation: pulse 2s infinite;
 }
 
 .record-button.disabled {
@@ -144,26 +156,30 @@
 }
 
 @keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4);
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
   }
-  70% {
-    box-shadow: 0 0 0 10px rgba(220, 53, 69, 0);
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
   }
-  100% {
-    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+}
+
+@media (max-width: 640px) {
+  .recording-interface {
+    @apply p-4;
+  }
+
+  .record-button {
+    width: 64px;
+    height: 64px;
   }
 }
 
 @media (max-width: 768px) {
   .recording-interface {
     padding: 1rem;
-  }
-
-  .record-button {
-    width: 50px;
-    height: 50px;
-    font-size: 1.25rem;
   }
 
   .playback-button {
@@ -186,11 +202,5 @@
     border-radius: 12px;
     margin: 1rem 0;
     min-height: 100px;
-    }
-    
-    .waveform {
-    width: 100%;
-    height: 80px;
-    background: transparent;
     }
 }

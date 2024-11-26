@@ -18,33 +18,29 @@ const Home = () => {
               <FaMusic className="note-3" />
             </div>
           </div>
-          
-          <div className="container mx-auto px-4 py-24 relative z-10">
-            <img 
-              src="/logo.png" 
-              alt="Ignite Consulting" 
-              className="w-32 h-auto mb-8 mx-auto"
-            />
-            <h1 className="text-5xl md:text-6xl font-bold text-center mb-6 text-gray-900">
-              Unleash Your Inner Voice with Sing-A-Song
-            </h1>
-            <p className="text-xl md:text-2xl text-center mb-12 text-gray-600 max-w-3xl mx-auto">
-              Record up to 2 minutes of audio effortlessly. No sign-up required for basic features.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link 
-                to="/record" 
-                className="primary-button flex items-center gap-2 text-lg"
-              >
-                <FaMicrophone />
-                Start Recording
-              </Link>
-              <Link 
-                to="/login" 
-                className="secondary-button flex items-center gap-2 text-lg"
-              >
-                Try Premium Features
-              </Link>
+          <div className="container mx-auto px-4 py-16 md:py-24 relative z-10">
+            <div className="text-center">
+              <h1 className="text-5xl md:text-6xl font-bold text-center mb-6 text-gray-900">
+                Unleash Your Inner Voice and Share with the World
+              </h1>
+              <p className="text-xl md:text-2xl text-center mb-12 text-gray-600 max-w-3xl mx-auto">
+                Record up to 2 minutes of audio effortlessly
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Link 
+                  to="/record" 
+                  className="primary-button flex items-center gap-2 text-lg"
+                >
+                  <FaMicrophone />
+                  Start Recording
+                </Link>
+                <Link 
+                  to="/login" 
+                  className="secondary-button flex items-center gap-2 text-lg"
+                >
+                  Try Premium Features
+                </Link>
+              </div>
             </div>
           </div>
         </section>
