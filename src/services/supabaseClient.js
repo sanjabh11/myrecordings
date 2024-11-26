@@ -3,6 +3,7 @@ import { uuidToBase62, base62ToUuid } from '../utils/base62';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const siteUrl = import.meta.env.VITE_SITE_URL;
 
 const options = {
   auth: {
@@ -13,7 +14,7 @@ const options = {
   global: {
     headers: {
       'X-Client-Info': 'sing-a-song',
-      'Access-Control-Allow-Origin': ['https://sing-a-song.netlify.app', 'http://localhost:5173']
+      'Access-Control-Allow-Origin': ['https://sing-a-song.netlify.app', siteUrl]
     }
   }
 };
@@ -31,7 +32,7 @@ const getStorageClient = () => {
 // Helper function to get base URL
 const getBaseUrl = () => {
   const isProd = import.meta.env.PROD;
-  return isProd ? 'https://sing-a-song.netlify.app' : 'http://localhost:5173';
+  return isProd ? 'https://sing-a-song.netlify.app' : siteUrl;
 };
 
 // Storage operations helper functions

@@ -1,244 +1,146 @@
-import React, { useState, useEffect, useRef } from 'react';
-import WaveSurfer from 'wavesurfer.js';
-import './RecordingInterface.css';
+import React, { useState, useRef, useEffect } from 'react';
+import PropTypes from 'prop-types';
 
 const RecordingInterface = ({ 
   isRecording,
   onStart,
   onStop,
   disabled,
-  error: externalError,
-  audioBlob
+  error: externalError
 }) => {
+  const [audioUrl, setAudioUrl] = useState('');
+  const [error, setError] = useState('');
   const [timer, setTimer] = useState(0);
-  const [mediaRecorder, setMediaRecorder] = useState(null);
-  const [error, setError] = useState(null);
-  const [hasPermission, setHasPermission] = useState(false);
-  const [isWaveSurferInitialized, setIsWaveSurferInitialized] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isWaveSurferReady, setIsWaveSurferReady] = useState(false); // Added state variable
-  
-  const chunks = useRef([]);
-  const timerInterval = useRef(null);
-  const waveformRef = useRef(null);
-  const wavesurfer = useRef(null);
-  const audioContext = useRef(null);
-  const analyser = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const timerRef = useRef(null);
+  const chunksRef = useRef([]);
 
-  // Check microphone permissions on mount
   useEffect(() => {
-    checkMicrophonePermission();
     return () => {
-      if (wavesurfer.current) {
-        wavesurfer.current.destroy();
-      }
-      if (audioContext.current) {
-        audioContext.current.close();
-      }
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (audioUrl) URL.revokeObjectURL(audioUrl);
     };
-  }, []);
-
-  const initializeWaveSurfer = async () => {
-    if (!isWaveSurferInitialized && waveformRef.current && !wavesurfer.current) {
-      try {
-        // Create AudioContext only when needed
-        if (!audioContext.current) {
-          audioContext.current = new (window.AudioContext || window.webkitAudioContext)();
-        }
-
-        // Resume AudioContext if it's suspended
-        if (audioContext.current.state === 'suspended') {
-          await audioContext.current.resume();
-        }
-
-        wavesurfer.current = WaveSurfer.create({
-          container: waveformRef.current,
-          waveColor: '#4a90e2',
-          progressColor: '#2d5a9e',
-          cursorColor: '#2d5a9e',
-          barWidth: 2,
-          barGap: 1,
-          height: 80,
-          normalize: true,
-          responsive: true,
-          backend: 'WebAudio',
-          audioContext: audioContext.current
-        });
-
-        wavesurfer.current.on('ready', () => {
-          setIsWaveSurferInitialized(true);
-          setIsWaveSurferReady(true); // Update the new state variable
-        });
-
-        wavesurfer.current.on('finish', () => {
-          setIsPlaying(false);
-        });
-      } catch (err) {
-        console.error('Failed to initialize WaveSurfer:', err);
-        setError('Failed to initialize audio visualizer');
-      }
-    }
-  };
-
-  const checkMicrophonePermission = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      setHasPermission(true);
-      stream.getTracks().forEach(track => track.stop());
-    } catch (err) {
-      console.error('Microphone permission error:', err);
-      setError('Please allow microphone access to record audio');
-      setHasPermission(false);
-    }
-  };
-
-  const startTimer = () => {
-    setTimer(0);
-    timerInterval.current = setInterval(() => {
-      setTimer(prev => {
-        if (prev >= 120) { // 2 minutes limit
-          stopRecording();
-          return prev;
-        }
-        return prev + 1;
-      });
-    }, 1000);
-  };
+  }, [audioUrl]);
 
   const startRecording = async () => {
     if (disabled) {
-      setError('Recording limit reached. Please upgrade to premium for unlimited recordings.');
+      setError('Recording limit reached. Please delete some recordings or upgrade to premium.');
       return;
     }
 
     try {
-      await initializeWaveSurfer(); // Initialize WaveSurfer before recording
-
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const context = await initAudioContext();
-
-      const recorder = new MediaRecorder(stream);
-      analyser.current = context.createAnalyser();
-      const source = context.createMediaStreamSource(stream);
-      source.connect(analyser.current);
-
-      analyser.current.fftSize = 2048;
-      const bufferLength = analyser.current.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
-
-      const visualize = () => {
-        if (!isRecording) return;
-        requestAnimationFrame(visualize);
-
-        analyser.current.getByteTimeDomainData(dataArray);
-        if (wavesurfer.current) {
-          const audioData = Array.from(dataArray).map(val => (val / 128.0) - 1);
-          const buffer = context.createBuffer(1, audioData.length, context.sampleRate);
-          buffer.getChannelData(0).set(audioData);
-          wavesurfer.current.loadDecodedBuffer(buffer);
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      
+      mediaRecorderRef.current.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunksRef.current.push(e.data);
         }
       };
 
-      recorder.ondataavailable = (e) => chunks.current.push(e.data);
-
-      recorder.onstop = () => {
-        const blob = new Blob(chunks.current, { type: 'audio/wav' });
-        chunks.current = [];
-        if (wavesurfer.current) {
-          const audioUrl = URL.createObjectURL(blob);
-          wavesurfer.current.load(audioUrl);
-        }
+      mediaRecorderRef.current.onstop = () => {
+        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        const url = URL.createObjectURL(blob);
+        setAudioUrl(url);
         onStop(blob);
-        stream.getTracks().forEach(track => track.stop());
+        chunksRef.current = [];
       };
 
-      setMediaRecorder(recorder);
-      recorder.start();
+      mediaRecorderRef.current.start();
       onStart();
-      startTimer();
-      visualize();
-      setError(null);
+      setError('');
+
+      // Start timer
+      setTimer(0);
+      timerRef.current = setInterval(() => {
+        setTimer(prev => {
+          if (prev >= 120) { // 2 minutes limit
+            stopRecording();
+            return 120;
+          }
+          return prev + 1;
+        });
+      }, 1000);
     } catch (err) {
-      console.error('Error starting recording:', err);
-      setError('Failed to start recording. Please check your microphone permissions.');
+      setError('Please allow microphone access to record audio.');
+      console.error('Error accessing microphone:', err);
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-      mediaRecorder.stop();
-      clearInterval(timerInterval.current);
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
     }
-  };
-
-  const initAudioContext = async () => {
-    if (!audioContext.current) {
-      audioContext.current = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (audioContext.current.state === 'suspended') {
-      await audioContext.current.resume();
-    }
-    return audioContext.current;
-  };
-
-  const handleFileSelect = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      if (file.size > 60 * 1024 * 1024) { // 60MB limit
-        setError('File size exceeds 60MB limit');
-        return;
-      }
-      const blob = new Blob([file], { type: file.type });
-      onStop(blob);
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
     }
   };
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
-    <div className="recording-interface">
-      {(error || externalError) && <div className="error-message">{error || externalError}</div>}
+    <div className="flex flex-col items-center">
+      {(error || externalError) && (
+        <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-4 w-full">
+          {error || externalError}
+        </div>
+      )}
 
-      <div className="recording-controls">
+      <div className="flex flex-col items-center space-y-4">
+        {/* Recording Timer */}
+        <div className="text-2xl font-mono">
+          {formatTime(timer)} / 2:00
+        </div>
+
+        {/* Recording Button */}
         <button
-          className={`record-button ${isRecording ? 'recording' : ''} ${disabled ? 'disabled' : ''}`}
           onClick={isRecording ? stopRecording : startRecording}
+          className={`w-20 h-20 rounded-full flex items-center justify-center transition-colors ${
+            isRecording
+              ? 'bg-red-500 hover:bg-red-600'
+              : 'bg-primary hover:bg-primary-dark'
+          } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
           disabled={disabled && !isRecording}
         >
-          {isRecording ? '⏹️' : '⏺️'}
+          <span className="text-white text-3xl">
+            {isRecording ? '⬛' : '🎤'}
+          </span>
         </button>
 
-        <div className="timer">
-          {formatTime(timer)}/02:00
-        </div>
-      </div>
-
-      <div className="waveform-container">
-        <div className="waveform" ref={waveformRef}></div>
-      </div>
-
-      <div className="file-upload">
-        <p>OR</p>
-        <label className={`file-upload-label ${disabled ? 'disabled' : ''}`}>
-          SELECT AUDIO FILE
-          <input
-            type="file"
-            accept="audio/*"
-            onChange={handleFileSelect}
-            disabled={disabled}
-            style={{ display: 'none' }}
-          />
-        </label>
-        <p className="file-upload-hint">
-          DROP YOUR MP3/WAV/M4A/AAC HERE. 60MB LIMIT
+        {/* Recording Status */}
+        <p className="text-gray-600">
+          {isRecording ? 'Recording in progress...' : 'Click to start recording'}
         </p>
+
+        {/* Audio Playback */}
+        {audioUrl && !isRecording && (
+          <div className="w-full max-w-md mt-4">
+            <audio controls className="w-full" src={audioUrl}>
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+        )}
       </div>
     </div>
   );
+};
+
+RecordingInterface.propTypes = {
+  isRecording: PropTypes.bool.isRequired,
+  onStart: PropTypes.func.isRequired,
+  onStop: PropTypes.func.isRequired,
+  disabled: PropTypes.bool,
+  error: PropTypes.string
+};
+
+RecordingInterface.defaultProps = {
+  disabled: false,
+  error: null
 };
 
 export default RecordingInterface;
