@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { storageHelpers } from '../../services/supabaseClient';
+import { storageHelpers, supabase } from '../../services/supabaseClient';
 import styles from './RecordingsList.module.css';
+import { FaWhatsapp, FaTwitter, FaFacebook, FaShare, FaPlay, FaPause, FaEdit } from 'react-icons/fa';
+import { MdContentCopy } from 'react-icons/md';
 
 const RecordingsList = ({ recordings, onDelete, getRecordingBlob, error }) => {
   const { user } = useAuth();
@@ -11,6 +13,7 @@ const RecordingsList = ({ recordings, onDelete, getRecordingBlob, error }) => {
   const [showShareModal, setShowShareModal] = useState(false);
   const [playingId, setPlayingId] = useState(null);
   const [audioElements, setAudioElements] = useState({});
+  const [copySuccess, setCopySuccess] = useState(false);
 
   useEffect(() => {
     // Cleanup audio elements when component unmounts
@@ -115,14 +118,54 @@ const RecordingsList = ({ recordings, onDelete, getRecordingBlob, error }) => {
     }
   };
 
+  const handleRename = async (recording) => {
+    setEditingId(recording.id);
+    setEditName(recording.name);
+  };
+
+  const handleSaveRename = async (recording) => {
+    try {
+      if (!editName.trim()) {
+        alert('Please enter a valid name');
+        return;
+      }
+
+      const { error: updateError } = await supabase
+        .from('recordings')
+        .update({ name: editName.trim() })
+        .eq('id', recording.id);
+
+      if (updateError) throw updateError;
+
+      // Update local state
+      recording.name = editName.trim();
+      setEditingId(null);
+      setEditName('');
+    } catch (error) {
+      console.error('Error renaming recording:', error);
+      alert('Failed to rename recording. Please try again.');
+    }
+  };
+
+  const handleCancelRename = () => {
+    setEditingId(null);
+    setEditName('');
+  };
+
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
-      alert('Link copied to clipboard!');
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
       alert('Failed to copy link. Please try manually selecting and copying.');
     }
+  };
+
+  const shareOnWhatsApp = () => {
+    const text = encodeURIComponent(`Check out this recording on Sing-A-Song!\n${shareUrl}`);
+    window.open(`https://web.whatsapp.com/send?text=${text}`, '_blank');
   };
 
   if (error) {
@@ -137,9 +180,28 @@ const RecordingsList = ({ recordings, onDelete, getRecordingBlob, error }) => {
         recordings.map((recording) => (
           <div key={recording.id} className={styles.recordingItem}>
             <div className={styles.recordingInfo}>
-              <div className={styles.recordingName}>
-                {recording.name}
-              </div>
+              {editingId === recording.id ? (
+                <div className={styles.recordingName}>
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSaveRename(recording);
+                      if (e.key === 'Escape') handleCancelRename();
+                    }}
+                    autoFocus
+                  />
+                  <div className={styles.editActions}>
+                    <button onClick={() => handleSaveRename(recording)}>Save</button>
+                    <button onClick={handleCancelRename}>Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                <div className={styles.recordingName}>
+                  {recording.name}
+                </div>
+              )}
               <div className={styles.recordingMeta}>
                 Created: {formatDate(recording.createdAt)}
               </div>
@@ -150,38 +212,87 @@ const RecordingsList = ({ recordings, onDelete, getRecordingBlob, error }) => {
                 className={`${styles.actionButton} ${styles.playButton} ${playingId === recording.id ? styles.playing : ''}`}
                 onClick={(e) => handlePlay(e, recording)}
               >
-                {playingId === recording.id ? '⏹️ Stop' : '▶️ Play'}
+                {playingId === recording.id ? <FaPause /> : <FaPlay />}
               </button>
-              
-              {user && (
+
+              {editingId !== recording.id && (
+                <button
+                  className={`${styles.actionButton} ${styles.editButton}`}
+                  onClick={() => handleRename(recording)}
+                >
+                  <FaEdit />
+                  <span>Rename</span>
+                </button>
+              )}
+
+              {user && editingId !== recording.id && (
                 <button
                   className={`${styles.actionButton} ${styles.shareButton}`}
                   onClick={() => handleShare(recording)}
                 >
-                  Share
+                  <FaShare />
+                  <span>Share</span>
                 </button>
               )}
-              
-              <button
-                className={`${styles.actionButton} ${styles.deleteButton}`}
-                onClick={() => handleDelete(recording.id)}
-              >
-                Delete
-              </button>
+
+              {editingId !== recording.id && (
+                <button
+                  className={`${styles.actionButton} ${styles.deleteButton}`}
+                  onClick={() => handleDelete(recording.id)}
+                >
+                  🗑️ Delete
+                </button>
+              )}
             </div>
           </div>
         ))
       )}
 
       {showShareModal && (
-        <div className={styles.shareModal}>
-          <div className={styles.shareModalContent}>
+        <div className={styles.modalOverlay}>
+          <div className={styles.shareModal}>
             <h3>Share Recording</h3>
-            <div className={styles.shareUrl}>
-              <input type="text" value={shareUrl} readOnly />
-              <button onClick={copyToClipboard}>Copy</button>
+            <div className={styles.shareOptions}>
+              <div className={styles.shareLink}>
+                <input
+                  type="text"
+                  value={shareUrl}
+                  readOnly
+                />
+                <button onClick={copyToClipboard}>
+                  <MdContentCopy />
+                  {copySuccess ? 'Copied!' : 'Copy'}
+                </button>
+              </div>
+              <div className={styles.socialShare}>
+                <button 
+                  className={styles.shareButton}
+                  onClick={() => window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent('Check out this recording on Sing-A-Song!')}`, '_blank')
+                }
+                >
+                  <FaTwitter /> Share on Twitter
+                </button>
+                <button 
+                  className={styles.shareButton}
+                  onClick={() => window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank')
+                }
+                >
+                  <FaFacebook /> Share on Facebook
+                </button>
+                <button 
+                  className={styles.shareButton}
+                  onClick={shareOnWhatsApp}
+                >
+                  <FaWhatsapp /> Share on WhatsApp
+                </button>
+              </div>
             </div>
-            <button className={styles.closeButton} onClick={() => setShowShareModal(false)}>Close</button>
+            <button 
+              className={styles.closeButton}
+              onClick={() => setShowShareModal(false)}
+            >
+              Close
+            </button>
           </div>
         </div>
       )}

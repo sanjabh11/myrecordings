@@ -11,11 +11,13 @@
   margin-bottom: 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .recordingInfo {
-  width: 100%;
+  flex: 1;
 }
 
 .recordingName {
@@ -29,6 +31,7 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 .recordingMeta {
@@ -46,28 +49,31 @@
 }
 
 .recordingActions {
-  margin-top: 1rem;
   display: flex;
-  gap: 0.5rem;
-  justify-content: flex-end;
+  gap: 10px;
+  align-items: center;
+  margin-left: auto;
 }
 
 .actionButton {
-  padding: 0.5rem 1rem;
+  padding: 8px 16px;
   border: none;
-  border-radius: 4px;
+  border-radius: 20px;
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  transition: all 0.2s ease;
 }
 
 .playButton {
-  background-color: #4a9eff;
+  background-color: #4CAF50;
   color: white;
 }
 
 .playButton:hover {
-  background-color: #1976d2;
+  background-color: #45a049;
 }
 
 .playButton.playing {
@@ -84,25 +90,25 @@
 }
 
 .editButton:hover {
-  background-color: #1976d2;
+  background-color: #1976D2;
 }
 
 .shareButton {
-  background-color: #28a745;
+  background-color: #2196F3;
   color: white;
 }
 
 .shareButton:hover {
-  background-color: #218838;
+  background-color: #1976D2;
 }
 
 .deleteButton {
-  background-color: #dc3545;
+  background-color: #f44336;
   color: white;
 }
 
 .deleteButton:hover {
-  background-color: #c82333;
+  background-color: #d32f2f;
 }
 
 .noRecordings {
@@ -111,83 +117,119 @@
   padding: 2rem;
 }
 
-.shareModal {
+.modalOverlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
 }
 
-.shareModalContent {
+.shareModal {
   background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  max-width: 500px;
+  padding: 24px;
+  border-radius: 12px;
   width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.shareModalContent h3 {
-  margin: 0 0 1.5rem 0;
+.shareModal h3 {
+  margin: 0 0 20px 0;
   color: #333;
+  font-size: 1.5rem;
 }
 
-.shareUrl {
+.shareOptions {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.shareUrl input {
+.shareLink {
+  display: flex;
+  gap: 10px;
+}
+
+.shareLink input {
   flex: 1;
-  padding: 0.5rem;
+  padding: 10px;
   border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 0.9rem;
+  border-radius: 6px;
+  font-size: 14px;
 }
 
-.shareUrl button {
-  padding: 0.5rem 1rem;
-  background-color: #4a9eff;
+.shareLink button {
+  padding: 10px 20px;
+  background-color: #2196F3;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s;
 }
 
-.shareUrl button:hover {
-  background-color: #1976d2;
+.shareLink button:hover {
+  background-color: #1976D2;
 }
 
-.shareNote {
-  background-color: #fff3cd;
-  border: 1px solid #ffeeba;
-  color: #856404;
-  padding: 1rem;
-  border-radius: 4px;
-  margin-bottom: 1.5rem;
-  font-size: 0.9rem;
-  line-height: 1.4;
+.socialShare {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.socialShare button {
+  padding: 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: white;
+  transition: opacity 0.2s;
+}
+
+.socialShare button:hover {
+  opacity: 0.9;
+}
+
+.socialShare button:nth-child(1) {
+  background-color: #1DA1F2;
+}
+
+.socialShare button:nth-child(2) {
+  background-color: #4267B2;
+}
+
+.socialShare button:nth-child(3) {
+  background-color: #25D366;
 }
 
 .closeButton {
+  margin-top: 20px;
   width: 100%;
-  padding: 0.75rem;
-  background-color: #6c757d;
-  color: white;
+  padding: 12px;
+  background-color: #e0e0e0;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 14px;
+  transition: background-color 0.2s;
 }
 
 .closeButton:hover {
-  background-color: #5a6268;
+  background-color: #d0d0d0;
 }
 
 .error {
@@ -198,4 +240,32 @@
   border: 1px solid #f5c6cb;
   border-radius: 4px;
   margin: 1rem 0;
+}
+
+.editActions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.editActions button {
+  padding: 4px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.editActions button:first-child {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.editActions button:last-child {
+  background-color: #dc3545;
+  color: white;
+}
+
+.editActions button:hover {
+  opacity: 0.9;
 }
