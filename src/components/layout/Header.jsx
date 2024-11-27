@@ -19,7 +19,6 @@ const Header = () => {
         <Link to="/" className="logo">RecordNow</Link>
         <nav>
           <ul className="flex items-center gap-8">
-            <li><Link to="/">Home</Link></li>
             <li><Link to="#features">Features</Link></li>
             {user ? (
               <>

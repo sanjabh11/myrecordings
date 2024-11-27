@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { storageHelpers, supabase } from '../../services/supabaseClient';
+import { storageHelpers } from '../../services/supabaseClient';
 import styles from './RecordingsList.module.css';
 import { FaWhatsapp, FaTwitter, FaFacebook, FaShare, FaPlay, FaPause, FaEdit } from 'react-icons/fa';
 import { MdContentCopy } from 'react-icons/md';
+import { useRecordings } from '../../hooks/useRecordings';
 
-const RecordingsList = ({ recordings, onDelete, getRecordingBlob, error }) => {
+const RecordingsList = ({ recordings: initialRecordings, onDelete, getRecordingBlob, error }) => {
   const { user } = useAuth();
+  const { updateRecording } = useRecordings();
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState('');
   const [shareUrl, setShareUrl] = useState('');
@@ -14,6 +16,11 @@ const RecordingsList = ({ recordings, onDelete, getRecordingBlob, error }) => {
   const [playingId, setPlayingId] = useState(null);
   const [audioElements, setAudioElements] = useState({});
   const [copySuccess, setCopySuccess] = useState(false);
+  const [recordings, setRecordings] = useState(initialRecordings);
+
+  useEffect(() => {
+    setRecordings(initialRecordings);
+  }, [initialRecordings]);
 
   useEffect(() => {
     // Cleanup audio elements when component unmounts
@@ -119,6 +126,10 @@ const RecordingsList = ({ recordings, onDelete, getRecordingBlob, error }) => {
   };
 
   const handleRename = async (recording) => {
+    if (!user) {
+      alert('Please sign in to rename recordings');
+      return;
+    }
     setEditingId(recording.id);
     setEditName(recording.name);
   };
@@ -130,15 +141,13 @@ const RecordingsList = ({ recordings, onDelete, getRecordingBlob, error }) => {
         return;
       }
 
-      const { error: updateError } = await supabase
-        .from('recordings')
-        .update({ name: editName.trim() })
-        .eq('id', recording.id);
-
-      if (updateError) throw updateError;
+      const newName = editName.trim();
+      await updateRecording(recording.id, { name: newName });
 
       // Update local state
-      recording.name = editName.trim();
+      setRecordings(prev => 
+        prev.map(r => r.id === recording.id ? { ...r, name: newName } : r)
+      );
       setEditingId(null);
       setEditName('');
     } catch (error) {
